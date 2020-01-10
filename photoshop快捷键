@@ -1,0 +1,137 @@
+
+
+photoshop快捷键
+
+v 移动
+x 交换前后背景色
+z 放大镜，若摁住alt放小（配合鼠标左键点击）
+p 钢笔工具
+t 输入文字
+d 前景色和背景色恢复默认黑白
+
+
+
+组合
+ctrl + j  复制图层（或 alt + 鼠标左键）
+ctrl + t  调整图大小（配合alt+shift）
+ctrl + i  色相反向
+ctrl+shift+i  设选中的区域反选
+ctrl + l  调出色阶图板（套索工具画了之后，调出色阶，调整后ctrl+D取消蚂蚁线）
+ctrl+D    取消蚂蚁线
+ctrl+H    隐藏标尺线
+ctrl+E    合并所选择的图层
+ctrl+U    调色相
+ctrl+M    曲线
+
+alt + delete 添加前景色
+alt + 左键 隐藏或显示所有图片
+alt + ctrl + g 剪贴蒙版（选中需被蒙的图层在上方后）
+alt +shift + 右键  拾色环
+
+ctrl+alt+g       注入（把上图层嵌入到下图层框框里）- 剪贴蒙版 - 或 alt+鼠标左键（在两图层之间）
+ctrl+shift+alt+N 新建图层（或 ctrl+shift+N）
+ctrl+shift+alt+e 合并所有图层
+shift+鼠标左键   点击蒙版，隐藏蒙版
+ctrl+shift+i  	 设选中的区域反选
+ctrl+shift+L     自动调整色阶
+
+F12 	恢复到原始
+去除白色背景
+[正常]->正片叠低
+
+
+
+
+
+
+
+
+
+最全PS视频教程合辑链接：
+https://pan.baidu.com/s/1Xa3KBoruJz-o8T_2COLrLw
+34G ps教程链接：
+https://pan.baidu.com/s/1eTaHhMq 
+密码：55ay
+
+https://pan.baidu.com/s/1dYkvOeeqqjUXWh-uiFdgnw
+密码：9179
+排版设计教程(old)：
+链接：https://pan.baidu.com/s/1KFp8RSnI9X20T8RrgVqhOQ
+密码：wo4p
+0基础学ps教程：
+链接：https://pan.baidu.com/s/1zI4oEz-miMEmhXOf5gzB6w
+密码：tlqi
+50G超大PS教程奉上（已下）！
+链接：https://pan.baidu.com/s/1xVnSHmQm6V7TUJAdymkcQQ  
+提取码：k0u2
+链接：https://pan.baidu.com/s/1d-Mp0I-UAbTL2VGkmYJVJg 
+提取码： 9qqw 
+
+
+http://www.doyoudo.com/
+https://space.bilibili.com/
+https://uiiiuiii.com/
+
+
+PS滤镜Camera Raw单独升级包（持续更新）
+http://www.360doc.com/content/19/0527/16/636843_838555464.shtml
+
+
+
+
+
+
+
+
+
+
+node
+https://www.liaoxuefeng.com/wiki/1022910821149312/1023021053637728
+
+vscode: Visual Studio Code 常用快捷键
+https://www.cnblogs.com/bindong/p/6045957.html
+
+
+
+
+
+
+
+
+
+
+【css】
+设置外边距合并到宽度里面
+box-sizing : border-box;
+
+多余文字用省略号
+display:flex;
+flex-grow : 1;
+overflow:hidden;
+white-space : nowrap;
+text-overflow:ellipsis;
+
+阴影
+文字阴影
+text-shadow : 距x轴 距y轴 大小 颜色
+text-shadow:2px 3px 5px gray;
+
+盒子阴影
+box-shadow：10px 10px 5px #888888 inset|outset;
+
+边线设置
+border:1px solid gray;
+圆角设置
+border-radius:5px; 
+
+
+
+
+
+
+
+
+
+
+
+

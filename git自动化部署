@@ -1,0 +1,206 @@
+git自动化部署
+
+环境说明：
+服务器上已安装git
+git仓库所在服务器 ： 192.168.153.xxx 
+web项目所在服务器 ： 192.168.153.xxx 
+
+仓库地址：/home/wwwroot/git/website.git
+web项目地址：/home/wwwroot/test
+
+两个客户端
+git客户端-1 
+git客户端-2 
+
+1.服务器上创建git用户
+useradd -s /bin/git-shell git     #不能登录
+useradd -s /sbin/nologin  susan
+useradd -s /sbin/nologin  lilei
+
+注意：如git客户端要用账号密码来操作(clone等命令)
+useradd -s /bin/git-shell susan
+useradd -s /bin/git-shell lilei
+useradd -s /bin/git-shell ding
+然后，给susan，lilei，ding设置密码
+clone时：
+git clone ding@192.168.153.xxx:/home/wwwroot/git/website.git
+此时，就不用在git目录下.ssh/authorized_keys 添加每个用户的公钥了。
+
+
+2.git客户端
+#git客户端-1
+git config --global user.name "susan"
+git config --global user.email "susan@qq.com"
+
+#git客户端-2
+git config --global user.name "lilei"
+git config --global user.email "lilei@qq.com"
+
+
+3.给 git 用户添加权限
+cd /home/git
+mkdir .ssh && cd .ssh
+touch authorized_keys
+注:.ssh 和 authorized_keys 权限所属默认755（rwxr-xr-x） 和 644（-rw-r--r--）
+
+4.把susan ，lilei的.ssh/目录下的id_rsa.pub公钥复制到 authorized_keys文件中：
+ssh-rsa 
+xxxxxxxxxx
+ susan@localhost.localdomain
+ssh-rsa 
+xxxxxxxxxx
+ lilei@localhost.localdomain
+
+保存退出。
+
+5.初始仓库
+mkdir /home/wwwroot/git && cd /home/wwwroot/git
+git init --bare website.git
+chown -R git:git website.git
+
+6.生成项目仓库
+mkdir /home/wwwroot/test && cd /home/wwwroot/test
+git clone /home/wwwroot/git/website.git
+此时,test目录下有website文件夹，website所属为www用户，则要让git拥有该目录的写权限（添加git用户为www用户的组成员）
+usermod -G 1000(www组ID) git
+
+
+7.git客户端克隆到本地
+#git客户端-1，户端-2
+git clone git@192.168.153.xxx:/home/wwwroot/git/website.git
+
+8.客户端-1
+touch test.txt
+git add .
+git commit -m"创建test.txt文件"
+git push origin master
+#不出意外正常上传，如果报错请检查权限
+
+9.添加钩子
+cd /home/wwwroot/git/website.git/hooks
+touch post-receive
+vim post-receive
+
+post-receive 文件里面粘贴：
+#!/bin/sh
+
+echo '====== 上传代码到服务器 ======'
+# 打开线上web项目文件夹
+cd /home/wwwroot/test/website
+# 重要,若取消的话将不能在cd的路径上进行git操作
+unset GIT_DIR
+git pull origin master
+
+# npm run build （若需要）
+# 自动更新composer（若需要）
+# composer update
+echo $(date) >> hook.log
+echo '====== 代码更新完成 ======'
+
+保存后给权限
+chmod +x post-receive
+
+10.客户端-2
+打开website,同步一下
+git pull [origin master]
+
+添加
+add.txt
+修改
+test.txt 
+
+git add .
+git commit  -m "testing ...."
+git push origin master
+
+不出意外，即可看到以下信息：
+$ git push
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 345 bytes | 345.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+remote: ========== 上传代码到服务器 =========
+remote: From /home/wwwroot/git/website
+remote:  * branch            master     -> FETCH_HEAD
+remote: Updating 5cbb0f8..f0db4a0
+remote: Fast-forward
+remote:  project.txt | 4 ++++
+remote:  test.txt    | 2 +-
+remote:  2 files changed, 5 insertions(+), 1 deletion(-)
+remote:  create mode 100644 project.txt
+remote: ========== 代码更新完成 ==========
+To 192.168.153.130:/home/wwwroot/git/website.git
+   5cbb0f8..f0db4a0  master -> master
+
+
+
+【git操作】
+撤销未add的修改[删除]
+git checkout . [或 filename]
+
+撤销从add中的修改[删除]
+git reset HEAD filename     
+git checkout . [或 filename]    再执行该命令恢复到未add的修改[删除]    
+
+撤销已commit的代码，此时本地修改的代码也会被恢复[删除]
+git reset --hard commit-id     
+git reset --soft commit-id      撤销已commit的代码，此时本地修改的代码还存在
+
+撤销已push远程的代码
+git reset HEAD~n[或 commit-id]  n（1,2..）,然后，
+git checkout . [或 filename]    撤销所有修改回到未add，强制push
+git push -f
+
+
+[init]
+echo "# tp5" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin  /home/wwwroot/git/tp5.git   # 这一步如果出错 fatal: remote origin already exists. 可先执行 git remote rm origin
+git push -u origin master
+
+
+Linux 文件隐藏属性
+Linux 下的文件还有一些隐藏属性，必须使用 lsattr 来显示，默认情况下，文件的隐藏属性都是没有 设置的（ext 文件系统默认拥有 e 属性）。 
+命令：lsattr [-a|d|R] 目录|文件  a显示所有的隐形属性，d显示目录，R递归显示
+lsattr -a test
+----i----------- test/.
+---------------- test/..
+---------------- test/a.txt
+
+命令：chattr（超级用户可用） 
+描述：文件系统属性 用法：chattr [+-=] [选项] 文件或目录
+i：如果对文件设置 i 属性，那么不允许对文件进行增删改、也不能改名；
+   如果对目录设置i属性，那么只能修改目录下文件的数据，但不允许建立和删除文件。
+   这种属性常用于设置在系统或关键服务中的配置文件对提升系统安全性有帮助。 
+a：如果对文件设置 a 属性，那么只能在文件中增加数据，但是不能删除也不能修改数据；如果对目录设置 a 属性，那么只允许在目录中建立 和修改文件，但是不允许删除。 
+e：Linux 中绝大多数的文件都默认拥有 e 属性（ext 系列文件系统）。表示该文件是使用 ext 件系统进行存储的，而且不能使用“chattr -e”命令取消 e 属性
+
+open_basedir php授权目录设置
+在php.ini中配置
+;open_basedir =
+如果发现配置项前是有分号，表明php.ini中没有该设置。那就很可能是在  php-fpm  中的 fastcgi.conf中配置了。php-fpm中的配置会覆盖php.ini的配置。
+
+在项目根目录中通过  .user.ini 进行配置。
+.user.ini配置
+首先，要使.user.ini生效，要设置php.ini 中的
+user_ini.filename = ".user.ini"
+user_ini.cache_ttl = 300
+
+注释掉 fastcgi.conf 中的 open_basedir  的配置。
+
+在项目根目录 创建 .user.ini文件，写入如下内容
+open_basedir=/tmp/:/proc/:/you_web_path
+/you_web_path 是你要添加的让php可以访问的路径。多个路径直接分号隔开
+重启一下php-fpm 服务即可。
+
+注意,三个地方配置的优先级如下
+“php.ini” > “nginx fastcgi fastcgi_param” > “php-fpm.conf”
+
+来自：https://www.cnblogs.com/guohong-hu/p/9350076.html
+
+
+

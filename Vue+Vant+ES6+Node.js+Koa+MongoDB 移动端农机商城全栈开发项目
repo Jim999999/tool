@@ -1,0 +1,129 @@
+Vue+Vant+ES6+Node.js+Koa+MongoDB 移动端农机商城全栈开发项目
+
+
+项目代码：https://github.com/xiecheng328/shop.git
+npmjs包管理：https://www.npmjs.com/
+
+1.安装node
+http://nodejs.cn/
+查看版本 ： node  -v
+
+安装vue-cli : npm install -g @vue/cli
+查看版本 : vue -V
+
+创建项目：vue create shop 或 vue ui
+进入项目：cd shop
+运行项目：npm run serve
+
+
+注：也可以用国内taobao的cnpm
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+
+以后，就可以用cnpm代替npm，如：
+cnpm install -g @vue/cli
+或者改变npm的下载地址（默认地址是https://registry.npmjs.org/）
+npm config set registry https://registry.npm.taobao.org
+
+安装webpack（js的打包器）
+npm install -g webpack
+
+
+2.前端组件库（有赞）
+https://youzan.github.io/vant/#zh-CN/intro
+
+npm install vant --save  (npm i vant -S) 在package.json文件的dependencies生产环境中，如果要安装开发环境devDependencies页面时，用npm install vant --save-dev
+
+注：
+还有其他的ui组件库
+vux,element,iview,muse-ui
+
+
+按需导入组件（推荐）
+npm i babel-plugin-import -D
+
+
+3.固定头部nav
+.nav-title{
+  position: fixed;
+  top:0;
+  left: 0;
+  width: 100%;
+}
+
+4.固定底部footer
+/* 弹性盒子*/
+.foot-bar{
+  display: flex; 
+  background: #cccccc;
+  position: fixed;
+  bottom: 0;  /* 贴近底部
+  width: 100%;/* 设置宽厚，才能贴近底部 -- 文档流
+  height: 1rem;
+  line-height: 1.4rem;
+}
+.foot-bar >.foot-bar-item{
+    flex-grow: 1;
+    text-align: center;
+} 
+
+
+自适应
+.item ul{
+  display: flex;
+  flex-wrap: wrap;
+  text-align: center;
+  justify-content: space-around;
+}
+
+
+5.mockjs模拟数据
+http://mockjs.com/
+规则
+https://github.com/nuysoft/Mock/wiki
+https://segmentfault.com/a/1190000012407192
+
+
+6.node web框架 koa 和 express
+https://www.koajs.com.cn/
+https://koa.bootcss.com/
+https://www.liaoxuefeng.com/wiki/1022910821149312/1099752344192192
+基于koa2企业级框架，egg（阿里），thinkjs(360)
+
+koa的解析请求包koa-bodyparser
+npm install koa-bodyparser --save
+
+
+7.nosql数据库mongodb
+下载：
+https://www.mongodb.com/download-center/community
+客户端管理工具下载
+https://robomongo.org/download
+
+8.nodejs的mongo客户端mongoose
+npm install mongoose --save
+连接数据库init.js
+定义schema数据模型，并引入
+npm install global --save
+
+9.koa解决跨域，安装koa2-cors
+npm install koa2-cors --save
+
+在入口处配置
+const Koa = require('koa');
+const app = new koa();
+app.use(cors({
+	origin:['http://localhost:8080'],
+	credentials:true,
+}));
+
+配置后，重启服务。
+
+10.加密 bcrypt包
+npm instal bcrypt --save
+
+
+
+
+
+
+
