@@ -1,0 +1,191 @@
+laravel
+https://laravelacademy.org/laravel-tutorial-5_7
+安装
+1.composer 安装
+1-1、设置国内镜像 中国镜像：http://pkg.phpcomposer.com/ 
+composer config -g repo.packagist composer https://packagist.phpcomposer.com
+1-2、根目录下安装
+composer create-project laravel/laravel 
+1-3.laravel手册
+https://learnku.com/docs/laravel/5.6
+
+
+延时队列
+https://github.com/chenlinzhong/php-delayqueue
+
+git高级操作
+撤销未add的修改[删除]
+git checkout . [或 filename]
+
+撤销从add中的修改[删除]
+git reset HEAD filename     
+git checkout . [或 filename]    再执行该命令恢复到未add的修改[删除]    
+
+撤销已commit的代码，此时本地修改的代码也会被恢复[删除]
+git reset --hard commit-id     
+git reset --soft commit-id      撤销已commit的代码，此时本地修改的代码还存在
+
+撤销已push远程的代码
+git reset HEAD~n[或 commit-id]  n（1,2..）,然后，
+git checkout . [或 filename]    撤销所有修改回到未add，强制push
+git push -f
+
+
+
+克隆tp5仓库
+git clone https://github.com/top-think/think tp5  
+然后切换到tp5目录继续克隆核心框架仓库
+git clone https://github.com/top-think/framework thinkphp
+注意,两次clone后 ,都切换分支到master上，再删除掉.git .gitignore 文件
+
+
+[init]
+echo "# tp5" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin  /home/wwwroot/git/tp5.git   # 这一步如果出错 fatal: remote origin already exists. 可先执行 git remote rm origin
+git push -u origin master
+
+
+Linux 文件隐藏属性 
+Linux 下的文件还有一些隐藏属性，必须使用 lsattr 来显示，默认情况下，文件的隐藏属性都是没有 设置的（ext 文件系统默认拥有 e 属性）。 
+命令：lsattr [-a|d|R] 目录|文件  a显示所有的隐形属性，d显示目录，R递归显示
+lsattr -a test
+----i----------- test/.
+---------------- test/..
+---------------- test/a.txt
+
+命令：chattr（超级用户可用） 
+描述：文件系统属性 用法：chattr [+-=] [选项] 文件或目录
+i：如果对文件设置 i 属性，那么不允许对文件进行增删改、也不能改名；
+   如果对目录设置i属性，那么只能修改目录下文件的数据，但不允许建立和删除文件。
+   这种属性常用于设置在系统或关键服务中的配置文件对提升系统安全性有帮助。 
+a：如果对文件设置 a 属性，那么只能在文件中增加数据，但是不能删除也不能修改数据；如果对目录设置 a 属性，那么只允许在目录中建立 和修改文件，但是不允许删除。 
+e：Linux 中绝大多数的文件都默认拥有 e 属性（ext 系列文件系统）。表示该文件是使用 ext 件系统进行存储的，而且不能使用“chattr -e”命令取消 e 属性
+
+
+
+linux，lnmp5环境安装tp5
+git clone https://github.com/top-think/think tp5
+cd tp5 && checkout master
+git clone https://github.com/top-think/framework thinkphp
+cd thinkphp && checkout master
+此时正常情况下可访问。
+若访问不了，先检查权限
+1.开启config.php debug为true;
+2.在入口文件index.php 中，
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+3.查看/home/wwwlogs目录下的nginx_error.log错误信息;
+4.首页可访问，pathinfo 的url（IP/index.php/model/controller/action）访问报错,
+  pathinfo兼容问题，而IP/index.php?s=/model/controller/action 可访问
+  解决：https://blog.csdn.net/xysoul/article/details/79491597
+  apache环境 .htaccess 
+  <IfModule mod_rewrite.c>
+	Options +FollowSymlinks -Multiviews
+	RewriteEngine on
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule ^(.*)$ index.php?s=$1 [QSA,PT,L]
+  </IfModule>
+  nginx环境 conf/nginx.conf
+  location ~ \.php {    #去掉$
+         root          H:/PHPServer/WWW;  笔者这里默认是 html;
+         fastcgi_pass   127.0.0.1:9000;
+         fastcgi_index  index.php;
+         fastcgi_split_path_info ^(.+\.php)(.*)$;       #增加
+         fastcgi_param PATH_INFO $fastcgi_path_info;    #增加
+         fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+         include        fastcgi_params;
+    }
+  https://blog.csdn.net/woshihaiyong168/article/details/54973353
+ 
+  若是一键安装包lnmp
+	原因：无法加载pathinfo
+	解决办法：
+	在nginx.conf(/usr/local/nginx/conf)中，
+	将原先的‘include enable-php.conf’注释掉，
+	更改为‘include enable-php-pathinfo.conf;’后重启nginx即可。  
+
+5.若出现open_basedir权限问题，php授权目录设置
+vim /usr/local/nginx/conf/fastcgi.conf
+fastcgi_param PHP_ADMIN_VALUE "open_basedir=$document_root/:/tmp/:/proc/";
+修改为
+fastcgi_param PHP_ADMIN_VALUE "open_basedir=$document_root/../:/tmp/:/proc/";
+
+若再不行，尝试以下方法：
+在php.ini中配置
+;open_basedir =
+如果发现配置项前是有分号，表明php.ini中没有该设置。那就很可能是在  php-fpm  中的 fastcgi.conf中配置了。php-fpm中的配置会覆盖php.ini的配置。
+
+在项目根目录中通过  .user.ini 进行配置。
+.user.ini配置
+首先，要使.user.ini生效，要设置php.ini 中的
+user_ini.filename = ".user.ini"
+user_ini.cache_ttl = 300
+
+注释掉 fastcgi.conf 中的 open_basedir  的配置。
+
+在项目根目录 创建 .user.ini文件，写入如下内容
+open_basedir=/tmp/:/proc/:/you_web_path
+/you_web_path 是你要添加的让php可以访问的路径。多个路径直接分号隔开
+重启一下php-fpm 服务即可。
+
+注意,三个地方配置的优先级如下
+“php.ini” > “nginx fastcgi fastcgi_param” > “php-fpm.conf”
+
+来自：https://www.cnblogs.com/guohong-hu/p/9350076.html
+
+隐藏index.php
+apache :
+<IfModule mod_rewrite.c>
+  Options +FollowSymlinks -Multiviews
+  RewriteEngine on
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^(.*)$ index.php?/$1 [QSA,PT,L]
+</IfModule>
+
+nginx :
+location / {
+            if (!-e $request_filename) {
+                rewrite  ^(.*)$  /index.php?s=/$1  last;
+            }
+    }
+具体参考：
+https://www.cnblogs.com/blibli/p/11134157.html
+
+
+
+vscode 快捷
+https://www.cnblogs.com/awkflf11/p/9412344.html
+ctrl+鼠标左键 PHP Intelephense插件安装，要求php版本大于7，且设置环境变量。
+
+
+elasticsearch 
+安装参考：https://www.php.cn/linux-384847.html
+概念
+索引：含有相同属性的文档集合（必须小写）
+类型：索引可以定义一个或多个类型，文档必须属于一个类型
+文档：文档是可以被索引的基本数据单元
+<理解>:把索引看作一个database，类型就是一个table，文档相当于一行记录
+分片：每个索引都有多个分片，每个分片是一个Lucene索引
+备份：拷贝一份分片就完成了分片的备份
+注意 elasticsearch 在创建索引时默认为5个分片1个备份，分片只能在索引创建前修改，而备份可以动态修改
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
