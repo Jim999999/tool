@@ -135,6 +135,19 @@ To 192.168.153.130:/home/wwwroot/git/website.git
    5cbb0f8..f0db4a0  master -> master
 
 
+【push 推送报.git/objects写权限限制】
+remote: =========== 上传到服务器 ===========
+remote: error: insufficient permission for adding an object to repository database .git/objects
+remote: fatal: failed to write object
+remote: fatal: unpack-objects failed
+remote: =========== 更新完成 ==============
+To 192.168.153.132:/home/wwwroot/git/website.git
+   2ff5fd4..399919d  master -> master
+
+改：改项目目录下website/.git/object组权限为775
+
+
+
 
 【git操作】
 撤销未add的修改[删除]
