@@ -41,7 +41,7 @@ git config --global user.email "lilei@qq.com"
 cd /home/git
 mkdir .ssh && cd .ssh
 touch authorized_keys
-注:.ssh 和 authorized_keys 权限所属默认755（rwxr-xr-x） 和 644（-rw-r--r--）
+注:.ssh 和 authorized_keys 权限所属默认700或755（rwxr-xr-x） 和 600或644权限（-rw-r--r--），文件所属和组root
 
 4.把susan ，lilei的.ssh/目录下的id_rsa.pub公钥复制到 authorized_keys文件中：
 ssh-rsa 
