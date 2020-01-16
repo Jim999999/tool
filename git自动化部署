@@ -41,7 +41,7 @@ git config --global user.email "lilei@qq.com"
 cd /home/git
 mkdir .ssh && cd .ssh
 touch authorized_keys
-注:.ssh 和 authorized_keys 权限所属默认700或755（rwxr-xr-x） 和 600或644权限（-rw-r--r--），文件所属和组root
+注:.ssh 和 authorized_keys 权限所属默认700或755（rwxr-xr-x） 和 600或644权限（-rw-r--r--），文件所属和组git|root
 
 4.把susan ，lilei的.ssh/目录下的id_rsa.pub公钥复制到 authorized_keys文件中：
 ssh-rsa 
@@ -165,6 +165,10 @@ git reset --soft commit-id      撤销已commit的代码，此时本地修改的
 git reset HEAD~n[或 commit-id]  n（1,2..）,然后，
 git checkout . [或 filename]    撤销所有修改回到未add，强制push
 git push -f
+
+
+若服务器端sshd改了端口2020，则clone时：
+git clone ssh://git@192.168.153.133:2020/home/www/uweb.git
 
 
 [init]

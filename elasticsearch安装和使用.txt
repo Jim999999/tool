@@ -23,7 +23,8 @@ composer.json中:
     }
 根目录下：composer install
 
-
+测试数据:
+curl -H "Content-Type: application/json" -XPOST 'localhost:9200/bank/account/_bulk?pretty' --data-binary  @accounts.json
 
 vscode 快捷
 https://www.cnblogs.com/awkflf11/p/9412344.html
