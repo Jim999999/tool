@@ -4,5 +4,5 @@ ctrl+鼠标左键点击函数跳到定义位置
 https://www.cnblogs.com/awkflf11/p/9412344.html
 ctrl+鼠标左键 PHP Intelephense插件安装，要求php版本大于7，且设置环境变量。
 
-Shift+Ctl+O  显示所有函数列表
+Shift+Ctrl+O  显示所有函数列表
 

@@ -1,3 +1,8 @@
+linux vim编辑
+替换：
+.,$%s/abc/cbd/g  #当前到最后替换abc为cbd
+noh #搜索字符串显示高亮后，取消高亮的字符显示，则在执行ESC、冒号后输入
+
 laravel
 https://laravelacademy.org/laravel-tutorial-5_7
 安装
@@ -197,15 +202,32 @@ https://www.cnblogs.com/chunguang/p/5634342.html
 
 
 
-
-
-
-
-
-
-
-
-
+blog-hexo
+0.mkdir blog && cd blog
+1.npm install -g hexo #hexo路径加载入环境变量，一般会下载到node-v9.9.0-linux-x64/bin目录下
+2.hexo init
+3.hexo s    #根目录下执行，返回端口http://IP:4000
+4.hexo new [layout] <title>    #// [layout] 为布局，可选项为 `post`、`page`、`draft`，这将决定文章所在文件路径。
+								// <title> 为文章标题
+								// 如 hexo new post
+4.1 发布
+hexo g							
+4.2 更多命令，查看
+hexo -h
+5.部署配置，根目录下找到 _congif.yml
+# Deployment
+## Docs: https://hexo.io/docs/deployment.html
+deploy:
+  type: git
+  repo: <你的仓库地址> # https://github.com/TJ-XiaJiaHao/TJ-XiaJiaHao.github.io
+  branch: master
+5.1 部署工具 
+npm install hexo-deployer-git --save
+5.2 部署命令
+hexo clean
+hexo deploy
+6.换主题
+https://github.com/Shen-Yu/hexo-theme-ayer
 
 
 
