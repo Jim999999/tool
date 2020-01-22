@@ -53,6 +53,17 @@ git remote add origin  /home/wwwroot/git/tp5.git   # 这一步如果出错 fatal
 git push -u origin master
 
 
+git默认账户密码：        
+git config --global credential.helper store
+之后输入一次账号密码即可
+
+清除git用户名密码：
+git config --system --unset credential.helper
+
+git日常操作指令
+https://www.jianshu.com/p/c34a80b8d0ae
+
+
 Linux 文件隐藏属性 
 Linux 下的文件还有一些隐藏属性，必须使用 lsattr 来显示，默认情况下，文件的隐藏属性都是没有 设置的（ext 文件系统默认拥有 e 属性）。 
 命令：lsattr [-a|d|R] 目录|文件  a显示所有的隐形属性，d显示目录，R递归显示
@@ -194,12 +205,16 @@ composer.json中:
 RabbitMQ+PHP消息队列
 从本质上说消息对列就是一个队列结构的中间件，也就是说消息放入这个中间件之后就可以直接返回，并不需要系统立即处理，而另外会有一个程序读取这些数据，并按顺序进行逐次处理。
 
+install
+https://www.jianshu.com/p/a28ecc3209ed
+
 来源：
+https://www.cnblogs.com/fengyumeng/p/11133924.html
 https://www.cnblogs.com/dump/p/8243868.html 理论
 https://www.cnblogs.com/chenhaoyu/p/10731090.html
 https://www.jianshu.com/p/dff50e23c6c5
 https://www.cnblogs.com/chunguang/p/5634342.html
-
+https://www.jianshu.com/p/a28ecc3209ed  ubuntu系统
 
 
 blog-hexo
@@ -232,7 +247,28 @@ https://github.com/Shen-Yu/hexo-theme-ayer
 
 
 
+swoole
 
+1.安装
+wget  https://github.com/swoole/swoole-src/archive/v4.0.1.tar.gz
+tar -zxvf v4.0.1.tar.gz
+cd swoole-src-4.0.1
+/usr/local/php/bin/phpize
+./configure --with-php-config=/usr/local/php/bin/php-config
+make && make install
+最后，生成：
+Installing shared extensions:     /usr/local/php/lib/php/extensions/no-debug-non-zts-20170718/
+Installing header files:          /usr/local/php/include/php/
+2.php.ini文件中加上swoole扩展
+cd /usr/local/php/lib/php/extensions/no-debug-non-zts-20170718/
+extension=swoole.so
+3.查看有无加载
+php -m | grep swoole
+4.试运行swoole
+php swoole/examples/server/echo.php (默认占用9501端口)
+netstat -anp | grep 9501  或者 lsof -i:端口号 
+
+源码安装参考：https://www.jianshu.com/p/e89659283d63
 
 
 

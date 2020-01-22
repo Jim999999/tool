@@ -1,0 +1,130 @@
+1.php的反射机制
+根据一个对象，知道它所属的类，拥有哪些方法，属性，注释等
+
+class User{
+
+    public $age = 11;
+    
+
+    /**
+     * 获取所有用户数据
+     */
+    public function getUsers(){
+        
+        $users = [];
+        for($i=0;$i<=20;$i++){
+            $user=[
+                'user_id'=>rand(1000,9999),
+                'class'=>'no. '.rand(100,999),
+                'name'=>'username_'.rand(2999,99999),
+                'join_time'=>date('Y-m-d H:i:s',time()),
+            ];
+            $users[] = $user;
+        }
+        return $users;
+
+    }
+}
+
+
+	 $userMod = new User();
+     
+     $flc = new \ReflectionClass($userMod);
+     $userMod2 = $flc->newInstance();         //相当于实例化User自己 
+     echo $userMod2->age;
+
+     $result = $flc->getMethods();            //类中所有方法 getUsers
+     foreach($flc->getMethods() as $method){
+         //dump($method->getDocComment());    //方法的注释
+     }   
+  
+    $getUsers = $flc->getMethod('getUsers');  //调用方法getUsers  -1
+    //dump($getUsers->invokeArgs($userMod2,[]));
+    
+    $getUsers = new \ReflectionMethod($userMod2,'getUsers');  //调用方法 getUsers -2
+    // dump($getUsers->invoke($userMod2));
+    // die;
+
+     $result = $flc->getProperties();  //类中属性 age
+     dump($result);
+     die;
+
+
+2.依赖注入
+只要用来减少代码间的耦合，有效分离对象和它所需的外部资源
+class A{
+   public function a(){ return 'aa'};
+ }
+class B{
+   public function b($obj){
+     return $obj->a();
+   };
+ }
+
+$aobj = new A();
+$bobj = new B();
+var_dump($bobj->b($aobj));
+
+
+3.注册树模式
+注册树模式通过将对象实例注册到一颗全局的树上, 需要的时候从对象树上摘下来使用
+class Register{
+  protected $_objs = null;
+  
+  public static function set($key,$obj){
+     if(!isset($_objs[$key])){
+	    self::$_objs[$key] = $obj;
+	 }
+	 return true;
+  }
+
+
+  public static function get($key){
+     if(!isset($_objs[$key]){
+	   self:$_objs[$key] = new $key;
+	 }
+     
+	 return self::$_objs[$key];
+  }
+
+}
+
+4.Facade（门面/外观模式）：
+为子系统中的一组接口提供一个一致的界面，Facade模式定义了一个高层次的接口，使得子系统更加容易使用
+class A{
+  public $name ;
+  public $age ;
+  public function setName($name){
+    $this->name = $name;
+  }
+  public function setAge($age){
+	$this->age = $age;
+  }
+  
+  public function getUser(){
+	return "用户:".$this->name."，age:".$this->age;
+  }
+  
+}
+
+//封装UserFacade类，方便调用
+class userFacade{
+	public static function getUserCall($user){
+		$user = new User;
+		$user->setName($user['name']);
+		$user->setAge($user['age']);
+	    return $user->getUser();
+	}
+}
+
+//调用
+$user = ['name'="xxxx",'age'=>12];
+userFacade::getUserCall($user);  //最后只需一个函数就可以简化调用
+
+
+
+
+
+来源：
+https://www.jianshu.com/p/84270b721a26
+https://www.jianshu.com/p/6b3ce8c48f59
