@@ -24,11 +24,11 @@ git checkout . [或 filename]
 
 撤销从add中的修改[删除]
 git reset HEAD filename     
-git checkout . [或 filename]    再执行该命令恢复到未add的修改[删除]    
+git checkout . [或 filename]    再执行该命令恢复到未add的修改[删除]
 
 撤销已commit的代码，此时本地修改的代码也会被恢复[删除]
 git log --pretty=oneline
-git reset --hard commit-id     
+git reset --hard commit-id
 git reset --soft commit-id      撤销已commit的代码，此时本地修改的代码还存在
 
 撤销已push远程的代码
@@ -57,6 +57,11 @@ git push -u origin master
 git默认账户密码：        
 git config --global credential.helper store
 之后输入一次账号密码即可
+
+
+查看本地环境配置
+git config --list
+
 
 清除git用户名密码：
 git config --system --unset credential.helper
