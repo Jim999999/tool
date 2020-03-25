@@ -4,8 +4,7 @@
 class User{
 
     public $age = 11;
-    
-
+	
     /**
      * 获取所有用户数据
      */
@@ -22,7 +21,6 @@ class User{
             $users[] = $user;
         }
         return $users;
-
     }
 }
 
@@ -30,18 +28,23 @@ class User{
 	 $userMod = new User();
      
      $flc = new \ReflectionClass($userMod);
-     $userMod2 = $flc->newInstance();         //相当于实例化User自己 
+	 
+	 //相当于实例化User自己 
+     $userMod2 = $flc->newInstance();        
      echo $userMod2->age;
 
-     $result = $flc->getMethods();            //类中所有方法 getUsers
+	//类中所有方法 getUsers
+     $result = $flc->getMethods();            
      foreach($flc->getMethods() as $method){
          //dump($method->getDocComment());    //方法的注释
      }   
   
-    $getUsers = $flc->getMethod('getUsers');  //调用方法getUsers  -1
+	// 1- 调用方法getUsers
+    $getUsers = $flc->getMethod('getUsers');  
     //dump($getUsers->invokeArgs($userMod2,[]));
     
-    $getUsers = new \ReflectionMethod($userMod2,'getUsers');  //调用方法 getUsers -2
+	// 2- 调用方法 getUsers 
+    $getUsers = new \ReflectionMethod($userMod2,'getUsers'); 
     // dump($getUsers->invoke($userMod2));
     // die;
 
