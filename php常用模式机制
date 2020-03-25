@@ -51,6 +51,7 @@ class User{
      $result = $flc->getProperties();  //类中属性 age
      dump($result);
      die;
+	 
 
 
 2.依赖注入
