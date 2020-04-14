@@ -1,0 +1,205 @@
+laravel 操作知识点
+
+1.一对一、一对多（远层一对多）、多对多、一对一多态关联、一对多多态关联、多对多多态关联
+远层一对多：三个表，中间表有个字段关联第一个表和第三个表；
+一对一多态关联、一对多多态关联、多对多多态关联:在一对一，一对多，多对多基础上，增加了类型字段。
+
+2.通过 Tinker 实现 Laravel 命令行交互式 Shell
+在原生 PHP 中，交互式 Shell，php -a 命令。
+Laravel 自带了一个功能强大的 REPL —— Tinker，所谓 REPL，是 Read–Eval–Print-Loop 的缩写，这是一种交互式 Shell：获取用户输入并执行它们，然后将结果打印出来返回给用户。
+Laravel Tinker 就是基于 PsySH 实现的
+安装PsySH ：
+composer g require psy/psysh:@stable
+
+在命令行窗口中，输入psyh，即可进行交互：
+
+psyh支持基于 XDebug 进行代码调试、与系统 Shell 集成等等
+https://github.com/bobthecow/psysh/wiki/Usage
+
+使用Tinker 
+命令行中通过 php artisan tinker 即可进入 Laravel Tinker 的交互式 Shell。
+doc 命令可用于查看某个函数或方法的帮助文档,如：
+>>>doc config
+
+
+数据库操作
+https://xueyuanjun.com/post/9577.html#toc_5
+https://xueyuanjun.com/post/9699
+https://xueyuanjun.com/post/9698
+
+
+模型类中的访问器，修改器
+//修改器
+public function setCardNumAttribute($value){
+	 $value = str_replace(' ', '', $value);  // 将所有空格去掉
+	 $this->attributes['card_num'] = encrypt($value);
+}
+//访问器
+public function getCardNumAttribute(){
+	if(!$this->attributes['card_num']){
+		return '';
+	}
+	$card_num = decrypt($this->attributes['card_num']);
+	$lastFour = mb_substr($card_num,-4);
+	return '**** **** **** '.$lastFour;
+}
+
+
+数组 & JSON 转化
+Laravel 提供了更加快捷转化数组JSON的方法，数据表字段类型为 JSON（5.7以上） 或 TEXT （5.7以下）的字段
+在模型类中，
+protected $casts = [
+    'settings' => 'array'  #settings为字段
+];
+此时，当settings为数组保存到数据库时，自动转为json，取出时自动转为数组。如，
+$userModel = new Users;
+$userModel->settings= ['city'=>'guagnzhou','area'=>'longd'];
+$res = $userModel->save();
+更多小糖果
+https://xueyuanjun.com/post/9586.html#toc_4
+
+
+路由频率限制
+通过内置的 throttle 中间件来实现，该中间件接收两个参数，第一个是次数上限，第二个是指定时间段（单位：分钟）：
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/user', function () {
+        //
+    });
+});
+以上路由的含义是一分钟能只能访问路由分组的内路由（如 /user）60 次，超过此限制会返回 429 状态码并提示请求过于频繁。
+
+
+路由缓存（除了闭包路由）
+php artisan route:cache #创建路由缓存
+php artisan route:clear #清除路由缓存
+https://xueyuanjun.com/post/9615
+
+
+文件上传
+public function fileUpload(Request $request)
+{
+    if ($request->hasFile('picture')) {
+        $picture = $request->file('picture');
+        if (!$picture->isValid()) {
+            abort(400, '无效的上传文件');
+        }
+        // 文件扩展名
+        $extension = $picture->getClientOriginalExtension();
+        // 文件名
+        $fileName = $picture->getClientOriginalName();
+        // 生成新的统一格式的文件名
+        $newFileName = md5($fileName . time() . mt_rand(1, 10000)) . '.' . $extension;
+        // 图片保存路径
+        $savePath = 'images/' . $newFileName;
+        // Web 访问路径
+        $webPath = '/storage/' . $savePath;
+        // 将文件保存到本地 storage/app/public/images 目录下，先判断同名文件是否已经存在，如果存在直接返回
+        if (Storage::disk('public')->has($savePath)) {
+            return response()->json(['path' => $webPath]);
+        }
+        // 否则执行保存操作，保存成功将访问路径返回给调用方
+        if ($picture->storePubliclyAs('images', $newFileName, ['disk' => 'public'])) {
+            return response()->json(['path' => $webPath]);
+        }
+        abort(500, '文件上传失败');
+    } else {
+        abort(400, '请选择要上传的文件');
+    }
+}
+
+对图片的创建、修改和压缩处理
+https://xueyuanjun.com/post/3585.html
+
+表单字段验证
+https://xueyuanjun.com/post/9547.html#toc_17
+
+
+
+laravel api资源定位
+php artisan route:list   #查看所有的路由
+
+#创建资源控制器
+php artisan make:controller TaskController --resource 
+
+#路由文件 routes/api.php 中注册路由
+Route::resource('tasks', 'TaskController'); 
+
+#访问url
+http://主域名/api/tasks/{id}
+
+#自定义资源类
+php artisan make:resource Task    #在 app/Http/Resources 目录下生成 Task.php 资源类
+
+#将资源控制器的 show 方法改写如下：
+public function show($id)
+{
+    return new \App\Http\Resources\Task(Task::find($id));
+}
+
+#自定义返回指定字段，在资源类Task.php 的 toArray 方法，重写toArray()
+public function toArray($request)
+{
+
+	/**
+	 * 默认返回所有字段
+	 */
+	// return parent::toArray($request);
+
+	/**
+	 * 返回指定字段，$this 实例上调用模型类实例的任何字段，原理是资源类底层会通过魔术方法 __get 将其转化为调用实例化资源类时传入的模型实例上的对应字段。
+	 */
+	return [
+		'id'  => $this->id,
+		'name'=>$this->name,
+		'email'     =>$this->email,
+		'remember_token'=>$this->remember_token,
+		'avatar'    =>$this->avatar,
+		'car_num'   =>$this->car_num,
+		'settings'  =>$this->settings,
+		'is_deleted'=>$this->deleted_at ? 'yes' : 'no'
+	];
+}
+
+#在Task.php资源类中附带关联模型，也很简单，在查询的时候通过“渴求式“查询带上要关联的模型：
+public function show($id)
+{
+    return new \App\Http\Resources\Task(Task::with(['user' => function($query) {
+        $query->select('id', 'name');
+    }])->find($id));
+}
+
+
+#跳转
+Route::get('redirect/test', function () {
+    return redirect('/');  // 重定向到首页
+	//return response()->redirectTo('/');
+	 return redirect()->route('home');  // 重定向到首页（假设首页路由名称是home）
+    //return response()->redirectToRoute('home');  # 与上面等价
+	 return redirect()->action('HomeController@index');  // 重定向到首页
+    //return response()->redirectToAction('HomeController@index');  # 与上面等价
+});
+});
+
+
+#表单请求验证失败，想要返回填写表单页面，可以通过辅助函数 back 来实现,还会追加一个  withInput 方法将填写的表单请求数据一并返回
+Route::get('redirect/back', function () {
+    return back()->withInput();
+    //return redirect()->back()->withInput();  # 与上面等价
+});
+
+
+#当前请求数据
+method()：返回当前请求方式，如 GET/POST/PUT/DELETE 等；
+path()：返回当前请求路径（不包含域名），如访问 https://xueyuanjun.com/post/9804.html 返回 post/9804.html；
+url()：返回完整请求URL（包含域名）；
+is()：通过传入参数作为模式字符串与当前请求URL进行模式匹配，看请求URL中是否包含给定模式字符串；
+ip()：返回用户 IP 地址；
+header()：通过传入参数获取对应的请求头信息，为空则返回所有请求头；
+server()：获取 $_SERVER 中的数据，用法和 header() 方法一样；
+secure()：是否通过 HTTPS 访问；
+pjax()：是否通过 Pjax 访问；
+bearerToken()：从请求头中获取 Bearer Token 信息。
+
+#要访问用户上次请求输入的数据，可以通过 old() 方法：
+$old_input = $request->old('old_input'); #不传参数返回所有保存的上次请求数据
+

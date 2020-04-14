@@ -95,8 +95,9 @@ class Register{
 
 4.Facade（门面/外观模式）：
 为子系统中的一组接口提供一个一致的界面，Facade模式定义了一个高层次的接口，使得子系统更加容易使用
+(为子系统中的一组接口提供一个一致的更容易调用的界面)
 class A{
-  public $name ;
+  public $name;
   public $age ;
   public function setName($name){
     $this->name = $name;
@@ -113,17 +114,17 @@ class A{
 
 //封装UserFacade类，方便调用
 class userFacade{
-	public static function getUserCall($user){
+	public static function getUserCall($userInfo){
 		$user = new User;
-		$user->setName($user['name']);
-		$user->setAge($user['age']);
+		$user->setName($userInfo['name']);
+		$user->setAge($userInfo['age']);
 	    return $user->getUser();
 	}
 }
 
 //调用
 $user = ['name'="xxxx",'age'=>12];
-userFacade::getUserCall($user);  //最后只需一个函数就可以简化调用
+userFacade::getUserCall($userInfo);  //最后只需一个函数就可以简化调用
 
 
 
@@ -132,3 +133,25 @@ userFacade::getUserCall($user);  //最后只需一个函数就可以简化调用
 来源：
 https://www.jianshu.com/p/84270b721a26
 https://www.jianshu.com/p/6b3ce8c48f59
+
+设计模式
+https://xueyuanjun.com/books/php-design-pattern
+
+
+
+基于 Laravel + Vue 构建前后端分离应用
+https://xueyuanjun.com/books/api-driven-development-laravel-vue
+
+
+
+
+
+
+
+
+
+
+
+
+
+

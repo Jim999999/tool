@@ -1,0 +1,86 @@
+laravel填充器 - 测试数据
+
+#为 users 表快速创建一个填充器类  UsersTableSeeder：
+php artisan make:seeder UsersTableSeeder  #在 database/seeds 目录下创建一个 UsersTableSeeder 填充器类
+<?php
+
+use Illuminate\Database\Seeder;
+
+class UsersTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+     DB::table('users')->insert([
+        'name' => str_random(10),
+        'email' => str_random(10).'@gmail.com',
+        'password' => bcrypt('secret'),
+    ]);
+}
+#在 DatabaseSeeder 类的 run 方法中运行这个填充器类：
+$this->call(UsersTableSeeder::class);  #有多个填充器类，想要一次性运行，可以将它们都放到这个方法中调用。
+
+#所有表都填充
+php artisan db:seed 
+
+#填充 Users表
+php artisan db:seed --class=UsersTableSeeder
+
+#在运行迁移命令的同时填充测试数据
+php artisan migrate --seed 
+php artisan migrate:refresh --seed
+
+
+#通过模型工厂填充数据(一次填充多条数据)
+#模型工厂位于 database/factories 目录下：
+<?php
+
+use Faker\Generator as Faker;
+
+/*
+|--------------------------------------------------------------------------
+| Model Factories
+|--------------------------------------------------------------------------
+|
+| This directory should contain each of the model factory definitions for
+| your application. Factories provide a convenient way to generate new
+| model instances for testing / seeding your application's database.
+|
+*/
+
+$factory->define(App\User::class, function (Faker $faker) {
+    return [
+        'name' => $faker->name,
+        'email' => $faker->unique()->safeEmail,
+        'email_verified_at' => now(),
+        'password' => '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
+        'remember_token' => str_random(10),
+    ];
+});
+#faker规则https://github.com/fzaninotto/Faker
+
+
+#第一个参数是模型类，第二个参数是一个匿名函数，在该匿名函数中我们通过 Faker 类库提供的方法来定义字段规则，Faker 类库提供了丰富的字段规则帮助我们生成伪造字段值，这些规则可以在官方文档中查看，这里，我们使用 $faker->name 生成用户名，$faker->unique()->safeEmail 生成唯一的邮箱地址，最后再将这些字段模型返回。
+
+#调用模型工厂，需要借助 Laravel 提供的全局辅助函数 factory()，比如我们在 UsersTableSeeder 的 run 方法中通过模型工厂改写数据填充方法：
+public function run()
+{
+    /*DB::table('users')->insert([
+        'name' => str_random(10),
+        'email' => str_random(10).'@gmail.com',
+        'password' => bcrypt('secret'),
+    ]);*/
+
+    factory(\App\User::class, 5)->create();
+}
+
+#运行命令调用生成数据
+php artisan db:seed [--class=UsersTableSeeder]
+
+更详细参考：
+https://xueyuanjun.com/post/9694.html
+
+
+
