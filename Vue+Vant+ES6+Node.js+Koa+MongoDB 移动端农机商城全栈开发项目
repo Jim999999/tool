@@ -124,6 +124,14 @@ npm instal bcrypt --save
 
 
 
-
-
-
+扩展：
+在Vuex文档中将 Vuex 定位成专为 Vue.js 应用程序开发的状态管理模式。
+其作用，集中存储管理应用的所有组件的状态；无需多次传数据给组件，只需将其保存到 Vuex 模块中，任何地方组件都可获取数据。
+Vuex 模块的四个属性（state、actions、mutations、getters）
+ * 流程 ：
+ * 用户调用一个 action
+ * 该 action 加载/计算数据
+ * 该 action 提交一个 mutation
+ * state 被更新
+ * getter 将更新后的 state 返回给组件
+ * 组件被更新

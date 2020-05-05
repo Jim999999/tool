@@ -1,4 +1,20 @@
-laravel 操作知识点
+laravel 知识点
+
+速查表
+https://learnku.com/docs/laravel-cheatsheet/6.0
+
+
+
+配置nginx
+		root "F:\phpstudy\PHPTutorial\WWW\map\public";
+        location / {
+			try_files $uri $uri/ /index.php?$query_string;
+            index  index.html index.htm index.php l.php;
+            autoindex  off;
+        }
+
+
+
 
 1.一对一、一对多（远层一对多）、多对多、一对一多态关联、一对多多态关联、多对多多态关联
 远层一对多：三个表，中间表有个字段关联第一个表和第三个表；
@@ -202,4 +218,57 @@ bearerToken()：从请求头中获取 Bearer Token 信息。
 
 #要访问用户上次请求输入的数据，可以通过 old() 方法：
 $old_input = $request->old('old_input'); #不传参数返回所有保存的上次请求数据
+
+
+修改app\Http\Middleware\VerifyCsrfToken.php这个文件了
+文件中有个属性$except，可以设置哪些路由不用做csrf验证
+  protected $except = [
+        //除了这些方法
+        'createImages',
+    ];
+
+
+#中间件设置 header头参数
+php artisan make:middleware CheckHeader
+#在Illuminate\Foundation\Http\Kernel as HttpKernel 的 $middlewareGroups api中添加
+'api' => [
+            'throttle:60,1',
+            'bindings',
+            \App\Http\Middleware\CheckHeader::class, //自定义检测header头 X-Test-Mate
+        ],
+#在 \App\Http\Middleware\CheckHeader 中添加
+ public function handle($request, Closure $next)
+    {   
+        //请求处理前，检测X-Test-Mate ，没有就禁止
+        //if(!$request->header('X-Test-Mate',0)){
+        //    return response()->json(['status'=>400,'msg'=>'header has no valid X-Test-Mate args']);
+        //}
+
+
+        //跨域请求，响应时，带上设置 header 头的参数
+        $origin = $request->header('ORIGIN', '*');
+        header("Access-Control-Allow-Origin: $origin");
+        header("Access-Control-Allow-Credentials: true");
+        header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+        //header('Access-Control-Allow-Headers: Origin, Access-Control-Request-Headers, SERVER_NAME, Access-Control-Allow-Headers, cache-control, token, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie, X-XSRF-TOKEN');
+		
+		
+        return $next($request);  
+    }
+
+#laravel跨域时，安装
+composer require barryvdh/laravel-cors
+https://blog.csdn.net/u013787599/article/details/102703097
+
+
+redis 操作
+$redis = app('redis.connection');
+https://blog.csdn.net/h330531987/article/details/79090555
+
+
+
+
+
+
+
 

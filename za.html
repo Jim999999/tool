@@ -1,3 +1,22 @@
+OAuth2核心思路是通过各类认证手段（具体什么手段OAuth2不关心）认证用户身份，并颁发token（令牌）给第三方应用，
+使得第三方应用可以使用该token（令牌）在限定时间、限定范围访问指定资源。
+注:主要有四种认证手段，分别是授权码模式、隐式授权码模式（简单模式）、密码模式和客户端模式。
+缺点：OAuth2中使用token验证用户登录合法性，但token最大的问题是不携带用户信息，资源服务器无法在本地进行验证，每次对于资源的访问，资源服务器都需要向认证服务器发起请求，一是验证token的有效性，二是获取token对应的用户信息。如果有大量的此类请求，无疑处理效率是很低，且认证服务器会变成一个中心节点，这在分布式架构下很影响性能。
+
+JWT（Json Web Token）
+1.使用一种特殊格式的token，三部分：
+-头部Header
+-载荷Payload
+-签名Signature
+这三部分均用base64进行编码，并使用.进行分隔。一个典型的jwt格式的token类似xxxxx.yyyyy.zzzzz
+2.jwt其实并不是什么高深莫测的技术，相反非常简单。认证服务器通过对称或非对称的加密方式利用payload生成signature，并在header中申明签名方式
+3.直接在本地验证token，这种去中心化的验证机制非常适合分布式架构
+
+
+navicat 15 
+https://www.mochoublog.com/study/390.html
+解压(密码:www.mochoublog.com)
+
 各个版本php
 https://windows.php.net/downloads/releases/archives/
 

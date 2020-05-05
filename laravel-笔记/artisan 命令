@@ -77,6 +77,11 @@ php artisan
 			preset：切换应用前端框架脚手架代码，比如从 Vue 切换到 React
 			
 			--version：打印当前 Laravel 版本
+			
+queue使用
+https://blog.csdn.net/weixin_33755557/article/details/88922686
+https://learnku.com/articles/3729/use-laravel-queue-to-understand-the-knowledge			
+			
 #migrate 相关命令
 php artisan migrate --help
 

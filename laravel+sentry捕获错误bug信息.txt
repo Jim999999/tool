@@ -1,0 +1,46 @@
+sentry异常实时监控及告警
+
+1.官网(https://sentry.io) 注册账号，在其后台建立应用，获取 API 认证信息；
+
+2.通过 Composer 安装对应扩展包：
+composer require sentry/sentry-laravel
+3. Laravel 5.5+ 版本，扩展包会自动发现，无需注册，然后将配置文件发布到 config 目录下：
+php artisan vendor:publish --provider="Sentry\SentryLaravel\SentryLaravelServiceProvider"
+4.编辑 .env 文件，将指南页面中的配置项目拷贝进去：
+SENTRY_LARAVEL_DSN=这里是你的DSN配置值
+
+5.最后一步，编辑 App/Exceptions/Handler.php 的 report 方法：
+public function report(Exception $exception)
+{
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+
+然后，在发布一下config，（以下命令就是Copied File [\vendor\sentry\sentry-laravel\config\sentry.php] To [\config\sentry.php]）
+php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
+
+6.通过将异常日志记录到 Sentry 中来实现类似的功能（注：该方法仅适用于 Laravel 5.6+ 版本，因为 5.6 版本才引入了日志频道功能），修改 config/logging.php 配置即可。首先在 .env 中修改 LOG_CHANNEL 为 stack，然后修改 config/logging.php 的 channels 配置如下（我是将 NOTICE 级别以上日志记录到 Sentry）：
+'channels' => [
+    'stack' => [
+        'driver' => 'stack',
+        'channels' => ['daily', 'sentry'],
+    ],
+
+    ... // 其他自带配置项
+
+    'sentry' => [
+        'driver' => 'sentry',
+        'level'  => \Monolog\Logger::NOTICE, // The minimum monolog logging level at which this handler will be triggered
+        // For example: `\Monolog\Logger::ERROR`
+        'bubble' => true, // Whether the messages that are handled can bubble up the stack or not
+    ],
+
+7.至此，编辑个脚本，故意语法错误，运行后，在https://sentry.io个人后台看看。
+
+
+
+
+
