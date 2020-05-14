@@ -1,3 +1,7 @@
+#查看进程pid对应的程序
+ll /proc/pid_number
+
+
 OAuth2核心思路是通过各类认证手段（具体什么手段OAuth2不关心）认证用户身份，并颁发token（令牌）给第三方应用，
 使得第三方应用可以使用该token（令牌）在限定时间、限定范围访问指定资源。
 注:主要有四种认证手段，分别是授权码模式、隐式授权码模式（简单模式）、密码模式和客户端模式。
@@ -297,6 +301,192 @@ php swoole/examples/server/echo.php (默认占用9501端口)
 netstat -anp | grep 9501  或者 lsof -i:端口号 
 
 源码安装参考：https://www.jianshu.com/p/e89659283d63
+
+
+
+redis主从配置
+复制两个redis配置文件（启动两个redis，只需要一份redis程序，两个不同的redis配置文件即可）
+mkdir redis-master-slave
+cp path/to/redis/conf/redis.conf path/to/redis-master-slave master.conf
+cp path/to/redis/conf/redis.conf path/to/redis-master-slave slave.conf
+
+修改配置
+## master.conf
+port 6379
+bind 127.0.0.1 (或自己的内网ip)
+
+## slave.conf
+port 6380
+slaveof 127.0.0.1 6379
+bind 127.0.0.1 (或自己的内网ip)
+
+注意，配置文件中bind的配置
+bind 绑定的是redis服务器的ip，与redis客户端没有任何关系。
+https://blog.csdn.net/zhaoxichen_10/article/details/85000309
+
+分别启动两个redis
+redis-server path/to/redis-master-slave/master.conf
+redis-server path/to/redis-master-slave/slave.conf
+
+连接上master
+redis-cli -h 127.0.0.1 -p 6379
+
+连接上slave 
+redis-cli -h 127.0.0.1 -p 6380
+
+
+
+redis-sentinel哨兵
+sentinel 通常翻译成哨兵，就是放哨的，这里它就是用来监控主从节点的健康情况。客户端连接redis主从的时候，先连接 sentinel，sentinel会告诉客户端主redis的地址是多少，然后客户端连接上redis并进行后续的操作。当主节点挂掉的时候，客户端就得不到连接了因而报错了，客户端重新想sentinel询问主master的地址，然后客户端得到了[新选举出来的主redis]，然后又可以愉快的操作了。
+
+mkdir redis-sentinel
+cd redis-sentinel
+cp redis/path/conf/redis.conf path/to/redis-sentinel/redis01.conf
+cp redis/path/conf/redis.conf path/to/redis-sentinel/redis02.conf
+cp redis/path/conf/redis.conf path/to/redis-sentinel/redis03.conf
+touch sentinel.conf
+
+vim redis01.conf
+port 63791
+
+vim redis02.conf
+port 63792
+slaveof 127.0.0.1 63791
+
+vim redis03.conf
+port 63793
+slaveof 127.0.0.1 63791
+
+vim sentinel.conf #redis安装目录下也有提供了sentinel.conf
+daemonize yes
+port 26379
+sentinel monitor mymaster 127.0.0.1 63793 1  # 注意，mymaster 为主节点名字，可以随便取，后面程序里边连接的时候要用到，127.0.0.1 63793 为主节点的 ip,port；
+											 # 后面的数字1 表示选举主节点的时候，投票数。1表示有一个sentinel同意即可升级为master
+
+启动哨兵，使用jedis连接哨兵操作redis
+（上面我们配置好了redis主从，1主2从，以及1个哨兵。下面我们分别启动redis，并启动哨兵，之后，执行info查看主从信息。）
+redis-server path/to/redis-sentinel/redis01.conf
+redis-server path/to/redis-sentinel/redis02.conf
+redis-server path/to/redis-sentinel/redis03.conf
+
+redis-server path/to/redis-sentinel/sentinel.conf --sentinel
+https://www.php.cn/php-weizijiaocheng-406429.html
+
+
+redis集群原理
+所有的redis节点彼此互联(PING-PONG机制),内部使用二进制协议优化传输速度和带宽。
+节点的fail是通过集群中超过半数的节点检测失效时才生效（所以至少需要3个redis对象才能组成集群）。
+客户端与redis节点直连,不需要中间proxy层.客户端不需要连接集群所有节点,连接集群中任何一个可用节点即可。
+redis集群是没有统一的入口的，客户端（client）连接集群的时候连接集群中的任意节点（node）即可，集群内部的节点是相互通信的（PING-PONG机制），每个节点都是一个redis实例；
+redis-cluster把所有的物理节点映射到[0-16383]slot上,cluster 负责维护node<->slot<->value
+
+集群环境搭建要求
+Redis集群至少需要3个节点，这是因为其投票容错机制要求超过半数节点才认为某个节点宕机，所以2个节点无法构成集群。
+同时，要保证集群的高可用，所以需要每个节点都有从节点，也就是备份节点，所以Redis集群至少需要6台服务器。
+在这里用一台服务器虚拟运行6个redis实例，修改端口号为（7001-7006）。
+
+安装redis-5.0.5.tar.gz
+下载redis压缩包，然后解压压缩文件；
+进入到解压缩后的redis文件目录（此时可以看到Makefile文件），编译redis源文件,执行make；
+将redis启动方式改为后端启动，具体做法：把解压缩的redis文件下的redis.conf 文件复制到/usr/local/redis/bin目录下(没有bin，自行创建)，
+然后修改该redis.conf文件->daemonize：no 改为daemonize：yse ；绑定的ip改为 bind 0.0.0.0 ；
+复制2个脚本文件；cp redis-5.0.5/src/redis-cli redis-server ../bin/
+
+注意，redis3.0版本之前只支持单例模式，在3.0版本及以后才支持集群
+
+集群目录 /usr/local/src/redis-cluster 
+安装6台 redis实例
+在/usr/local/src/redis-cluster目录下
+mkdir {redis-01,redis-02,redis-03,redis-04,redis-05,redis-06}
+cp -r ../redis-5.0.5/bin /usr/local/src/redis-cluster/{redis-01,redis-02,redis-03,redis-04,redis-05,redis-06}
+配置redis-01,redis-02,redis-03,redis-04,redis-05,redis-06目录下的redis.conf，改端口和开启集群配置cluster-enabled yes 
+
+脚本启动6个redis实例
+./start-redis-cluster.sh
+脚本内容:
+#!/bin/sh
+
+cd /usr/local/src/redis-cluster/redis-01
+./redis-server redis.conf
+
+cd /usr/local/src/redis-cluster/redis-02
+./redis-server redis.conf
+
+cd /usr/local/src/redis-cluster/redis-03
+./redis-server redis.conf
+
+cd /usr/local/src/redis-cluster/redis-04
+./redis-server redis.conf
+
+cd /usr/local/src/redis-cluster/redis-05
+./redis-server redis.conf
+
+cd /usr/local/src/redis-cluster/redis-06
+./redis-server redis.conf
+
+因为redis集群的管理文件会用到ruby脚本，所以需要安装ruby环境
+安装ruby
+yum -y install ruby
+yum -y install rubygems
+
+同时，需要下载redis-3.0.0.gem 到集群目录
+gem install redis
+
+创建redis集群
+在redis.5.0以前，redis集群的ruby脚本工具是redis-trib.rb，现redis官方已统一为redis-cli 参数来完成。
+./redis-01/redis-cli --cluster create 192.168.153.142:7001 192.168.153.142:7002 192.168.153.142:7003 192.168.153.142:7004 192.168.153.142:7005 192.168.153.142:7006 --cluster-replicas 1
+
+
+客户端连接集群（连接集群节点，连接任意一个即可）
+./redis-01/redis-cli -c -h 192.168.153.142 -p 7001   #其中-c表示以集群方式连接redis，-h指定ip地址，-p指定端口号
+
+
+关闭集群脚本
+./close-redis-cluster.sh
+#!/bin/sh
+cd /usr/local/src/redis-01
+./redis-cli -p 7001 shutdown
+cd /usr/local/src/redis-02
+./redis-cli -p 7002 shutdown
+cd /usr/local/src/redis-03
+./redis-cli -p 7003 shutdown
+cd /usr/local/src/redis-04
+./redis-cli -p 7004 shutdown
+cd /usr/local/src/redis-05
+./redis-cli -p 7005 shutdown
+cd /usr/local/src/redis-06
+./redis-cli -p 7006 shutdown
+
+关闭集群后，若重启redis-cluster
+./start-redis-cluster.sh
+
+
+重启若报错
+https://blog.csdn.net/truelove12358/article/details/79612954
+
+Redis的Errorlog或者启动日志（错误日志）的配置
+Redis默认并没有配置ErrorLog，如果没有指定logfile（的路径），logs will be sent to /dev/null
+配置
+logfile “/usr/local/redis5/redis_log.log”
+
+安全防范：
+入侵特征：
+Redis 可能执行过 FLUSHALL 方法，整个 Redis 数据库被清空
+在 Redis 数据库中新建了一个名为 crackit（网上流传的命令指令） 的键值对，内容为一个 SSH 公钥。
+在 /root/.ssh 文件夹下新建或者修改了 authorized_keys 文件，内容为 Redis 生成的 db 文件，包含上述公钥
+禁止一些高危命令
+修改 redis.conf 文件，添加
+rename-command FLUSHALL ""
+rename-command CONFIG   ""
+rename-command EVAL     ""
+
+
+https://blog.csdn.net/jackyechina/article/details/71267384?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3.nonecase
+
+https://blog.csdn.net/zhanghan18333611647/article/details/65632827
+
+redis可视化工具(redis-desktop-manager)
+https://www.jianshu.com/p/ccc3ebe29f7b
 
 
 

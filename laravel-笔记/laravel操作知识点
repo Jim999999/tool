@@ -3,6 +3,16 @@ laravel 知识点
 速查表
 https://learnku.com/docs/laravel-cheatsheet/6.0
 
+使用vscode开发laravel所需安装插件
+PHP Intelephense: 注意这个并不同于PHP IntelliSense ，后者以及PHP Extension Pack会导致vscode的代码提示加载缓慢，具体可查看该issue
+PHP Snippets from PHPStorm
+Laravel 5 Snippets
+laravel-blade
+Laravel Blade Snippets
+Laravel Blade Spacer
+Laravel goto view：alt+click跳转到相应的view
+laravel-goto-controller: 在route文件里，可以alt+click跳转到相应的controller
+https://xueyuanjun.com/post/8016.html
 
 
 配置nginx
@@ -264,6 +274,20 @@ https://blog.csdn.net/u013787599/article/details/102703097
 redis 操作
 $redis = app('redis.connection');
 https://blog.csdn.net/h330531987/article/details/79090555
+
+
+
+[init]
+echo "# tp5" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin git@192.168.153.130:/home/wwwroot/git/website.git 
+git push -u origin master -f
+
+
+https://xueyuanjun.com/books/api-driven-development-laravel-vue
+源码：https://github.com/nonfu/roastapp
 
 
 

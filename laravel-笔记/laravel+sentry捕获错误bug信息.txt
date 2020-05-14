@@ -44,3 +44,49 @@ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
 
 
 
+
+
+【如若要安装自己的sentry服务器，按以下步骤】
+要求：系统内存至少3G。
+Sentry搭建有两种方式：通过python 或 通过docker。
+通过docker安装：
+1.安装docker 
+docker环境要求 linux 3.10 内核 ：
+uname -a
+2.安装需要的软件包， yum-util 提供yum-config-manager功能，另外两个是devicemapper驱动依赖的
+yum install -y yum-utils device-mapper-persistent-data lvm2
+3.设置yum源
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+4.查看所有仓库中所有docker版本，并选择特定版本安装
+yum list docker-ce --showduplicates | sort -r
+5.yum install docker-ce-版本号，我选的是17.12.1.ce，如下
+yum install docker-ce-17.12.1.ce
+6.启动Docker，命令：systemctl start docker，然后加入开机启动，如下
+systemctl start docker
+systemctl enable docker
+7.docker version 
+
+8.开始正式安装sentry环境
+8-1.安装redis并启动
+docker run -d  --name sentry-redis redis
+8-2.安装Postgre并启动
+docker run -d --name sentry-postgres -e POSTGRES_PASSWORD=secret -e POSTGRES_USER=sentry postgres
+8-3.安装sentry并生成一个密钥，用于在后面所有sentry容器之间握手，记住此处生成的密钥需要记录下后续使用
+docker run --rm sentry config generate-secret-key
+
+....
+
+
+
+参考
+https://www.cnblogs.com/heyouxin/p/12468984.html
+https://www.pythonsky.cn/technical-talk/128.html
+https://www.cnblogs.com/luguiqing/p/11186576.html
+https://www.jianshu.com/p/a345d9a695c7
+
+
+
+
+
+
+

@@ -221,3 +221,40 @@ open_basedir=/tmp/:/proc/:/you_web_path
 
 
 
+gitlab安装
+https://cloud.tencent.com/developer/labs/lab/10288
+https://www.cnblogs.com/zxtceq/p/11083367.html
+https://www.cnblogs.com/zxtceq/p/11088097.html
+
+修改默认的gitlab clone地址，要不每次都得自己修改，也可改端口port(但改了8080无法访问)
+vim /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
+注意，修改时注意配置文件的语法.
+
+重启gitlab
+gitlab-ctl restart
+查看日志
+gitlab-ctl tail |[process name]
+
+有改端口时，开放端口
+开放端口的方法：
+方法一：命令行方式
+   1. 开放端口命令： /sbin/iptables -I INPUT -p tcp --dport 8080 -j ACCEPT
+   2.保存：/etc/rc.d/init.d/iptables save
+   3.重启服务：/etc/init.d/iptables restart
+   4.查看端口是否开放：/sbin/iptables -L -n
+ 方法二：直接编辑/etc/sysconfig/iptables文件
+   1.编辑/etc/sysconfig/iptables文件：vi /etc/sysconfig/iptables
+	   加入内容并保存：-A RH-Firewall-1-INPUT -m state --state NEW -m tcp -p tcp --dport 8080 -j ACCEPT
+   2.重启服务：/etc/init.d/iptables restart
+   3.查看端口是否开放：/sbin/iptables -L -n
+
+
+
+
+
+
+
+
+
+
+
