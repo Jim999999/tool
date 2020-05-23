@@ -1,0 +1,626 @@
+#查看进程pid对应的程序
+ll /proc/pid_number
+
+【shell命令】
+echo 命令
+	-n 取消末尾的回车符
+	-e 解释引号（双引号和单引号）里面的特殊字符（比如换行符\n）
+echo rm * 只会打印要被删除的文件
+
+type 命令
+作用：判断命令的来源（外部，内置），如：
+type ls
+-t 参数，可以返回一个命令的类型：
+别名（alias），关键词（keyword），函数（function），内置命令（builtin）和文件（file）。
+
+
+模式匹配
+[^abc]或[!abc] 表示匹配除了a、b、c以外的字符。
+[start-end] 表示匹配一个连续的范围。比如，[a-c]等同于[abc]，[0-9]匹配[0123456789]
+[a-z]：所有小写字母。
+[a-zA-Z]：所有小写字母与大写字母。
+[a-zA-Z0-9]：所有小写字母、大写字母与数字。
+[abc]*：所有以a、b、c字符之一开头的文件名。
+program.[co]：文件program.c与文件program.o。
+BACKUP.[0-9][0-9][0-9]：所有以BACKUP.开头，后面是三个数字的文件名。
+这种简写形式有一个否定形式[!start-end]，表示匹配不属于这个范围的字符。比如，[!a-zA-Z]表示匹配非英文字母的字符：
+echo report[!1–3].txt
+report4.txt report5.txt
+
+大括号扩展
+表示分别扩展成大括号里面的所有值，各个值之间使用逗号分隔（逗号前后不能有空格）。比如，{1,2,3}扩展成1 2 3
+echo d{a,e,i,u,o}g
+dag deg dig dug dog
+注意，大括号扩展不是文件名扩展。它会扩展成所有给定的值，而不管是否有对应的文件存在。
+cp a.log{,.bak} 等同于 # cp a.log a.log.bak
+
+大括号可以嵌套
+echo {j{p,pe}g,png}
+jpg jpeg png
+
+echo a{A{1,2},B{3,4}}b
+aA1b aA2b aB3b aB4b
+
+{start..end} 或者{end..start} 表示扩展成一个连续序列。比如，{a..z}可以扩展成26个小写英文字母
+echo Number_{1..5}
+Number_1 Number_2 Number_3 Number_4 Number_5
+
+echo {a..c}{1..3}
+a1 a2 a3 b1 b2 b3 c1 c2 c3
+mkdir {2007..2009}-{01..12} 新建36个子目录，每个子目录的名字都是”年份-月份“。
+
+可以使用第二个双点号{start..end..step}，用来指定扩展的步长。
+echo {0..8..2}
+0 2 4 6 8
+
+变量扩展
+$SHELL , ${SHELL}
+变量名除了放在美元符号后面，也可以放在${}里面
+${!string*}或${!string@}返回所有匹配给定字符串string的变量名
+${!S*}扩展成所有以S开头的变量名。
+
+子命令扩展
+$(...)可以扩展成另一个命令的运行结果，该命令的所有输出都会作为返回值。
+echo $(date)
+$(...)可以嵌套，比如 $(ls $(pwd))
+注，较老的语法，子命令放在反引号之中，也可以扩展成命令的运行结果。
+
+算术扩展
+$((...))可以扩展成整数运算的结果
+字符类（没有可匹配的文件，字符类就原样输出）
+[[:alnum:]]：匹配任意英文字母与数字
+[[:alpha:]]：匹配任意英文字母
+[[:blank:]]：空格和 Tab 键。
+[[:cntrl:]]：ASCII 码 0-31 的不可打印字符。
+[[:digit:]]：匹配任意数字 0-9。
+[[:graph:]]：A-Z、a-z、0-9 和标点符号。
+[[:lower:]]：匹配任意小写字母 a-z。
+[[:print:]]：ASCII 码 32-127 的可打印字符。
+[[:punct:]]：标点符号（除了 A-Z、a-z、0-9 的可打印字符）。
+[[:space:]]：空格、Tab、LF（10）、VT（11）、FF（12）、CR（13）。
+[[:upper:]]：匹配任意大写字母 A-Z。
+[[:xdigit:]]：16进制字符（A-F、a-f、0-9）
+
+[![:digit:]] 匹配所有非数字
+
+echo [[:upper:]]*  输出所有大写字母开头的文件名
+
+
+变量的值本身也是变量，可以使用${!varname}的语法，读取最终的值。
+$ myvar=USER
+$ echo ${!myvar}
+注，USER是系统变量
+
+export NAME=value
+把变量传递给子 Shell，但子 Shell 修改了继承的变量$NAME，对父 Shell 没有影响。
+
+
+declare命令的主要参数（OPTION）如下。
+-a：声明数组变量。
+-f：输出所有函数定义。
+-F：输出所有函数名。
+-i：声明整数变量。
+-l：声明变量为小写字母。
+-p：查看变量信息。
+-r：声明只读变量。
+-u：声明变量为大写字母。
+-x：该变量输出为环境变量。
+
+declare -x foo 等同于 export foo
+declare命令如果用在函数中，声明的变量只在函数内部有效，等同于local命令。
+
+let 命令
+声明变量时，可以直接执行算术表达式，参数表达式如果包含空格，就需要使用引号。
+
+$? 为上一个命令的退出码，返回0执行成功，非零，上一个命令执行失败。
+$$ 为当前 Shell 的进程 ID，可以用来命名临时文件。
+$_ 为上一个命令的最后一个参数
+$! 为最近一个后台执行的异步命令的进程 ID
+$0 为当前 Shell 的名称（在命令行直接执行时）或者脚本名（在脚本中执行时）
+$- 为当前 Shell 的启动参数
+$@ 和$#表示脚本的参数数量
+
+${varname:-word}  如果变量varname存在且不为空，则返回它的值，否则返回word。
+${varname:=word}  如果变量varname存在且不为空，则返回它的值，否则将它设为word，并且返回word。
+${varname:+word}  如果变量名存在且不为空，则返回word，否则返回空值。它的目的是测试变量是否存在，比如${count:+1}表示变量count存在时返回1（表示true），否则返回空值。
+${varname:?message} 如果变量varname存在且不为空，则返回它的值，否则打印出varname: message，并中断脚本的执行。如果省略了message，则输出默认的信息“parameter null or not set.”。它的目的是防止变量未定义，比如${count:?"undefined!"}表示变量count未定义时就中断执行，抛出错误，返回给定的报错信息undefined!。
+
+上面四种语法如果用在脚本中，变量名的部分可以用到数字1到9，表示脚本的参数。
+filename=${1:?"filename missing."}
+
+linux 命令行readline操作
+https://wangdoc.com/bash/readline.html
+常用：
+Ctrl + a：移到行首。
+Ctrl + e：移到行尾。
+Ctrl + l：清屏
+Ctrl + k：剪切光标位置到行尾的文本。
+Ctrl + u：剪切光标位置到行首的文本。
+Ctrl + y：在光标位置粘贴文本。
+!!：执行上一个命令。
+!string：执行最近一个以指定字符串string开头的命令。
+Alt + .：插入上一个命令的最后一个词。
+
+另注:使用点. 后跟脚本文件，可以直接执行而不用赋予+x执行权限，如：
+. ./while.sh
+注，点.是source命令的简写。
+
+bash加上-x参数，执行每条命令之前，都会显示该命令
+bash -x script.sh
+
+-n：不运行脚本，只检查是否有语法错误。
+-v：输出每一行语句运行结果前，会先输出该行语句。
+-x：每一个命令处理完以后，先输出该命令，再进行下一个命令的处理。
+
+时间格式化
+date +"%Y-%d-%m %H:%M:%S" 或是 date +"%F %T"
+
+操作历史 history
+history -c
+清除操作历史
+export HISTTIMEFORMAT='%F %T'
+设置HISTTIMEFORMAT这个环境变量，就会在.bash_history文件保存命令的执行时间。
+export HISTSIZE=0
+HISTSIZE=0写入用户主目录的~/.bashrc文件，那么就不会保留该用户的操作历史。如果写入/etc/profile，整个系统都不会保留操作历史。
+
+标准错误输出 和 标准输出 都存入log文件中 
+>log 2>&1 等同于 &>log 等同于 >&log
+注，标准输出1可省略，如：1>log 等同于 >log
+
+字符串
+${#string}	 获取字符串长度
+${varname:offset:length}  字符串截取，从位置offset开始（从0开始计算），长度为length，
+						  offset为负值，表示从字符串的末尾开始算起，注意此时，负数前面必须有一个空格，以防止与${variable:-word}的变量的设置默认值语法混淆。
+
+注，不能直接操作字符串，只能通过变量来读取字符串，并且不会改变原始字符串。变量前面的美元符号可以省略。
+echo ${"hello":2:3} #报错
+
+
+算术运算
+((...))语法可以进行整数的算术运算 ，会自动忽略内部的空格。
+((foo = 5 + 5))
+echo $foo  # 10
+
+注，
+1. 这个语法不返回值，命令执行的结果根据算术运算的结果而定。只要算术结果不是0（环境变量$?为0才执行成功），命令就算执行成功。
+如果要读取算术运算的结果，需要在((...))前面加上美元符号$((...))，使其变成算术表达式，返回算术运算的值。
+如：echo $((2 + 2))
+2. $((...))内部可以用圆括号改变运算顺序
+3. 只能计算整数
+4. $((...))的圆括号之中，不需要在变量名之前加上$，不过加上也不报错。
+5. 如果在$((...))里面使用字符串，Bash 会认为那是一个变量名。如果不存在同名变量，Bash 就会将其作为空值
+6. 三元运算符执行一个单独的逻辑测试。它用起来类似于if/then/else语句。
+	echo $((a>1 ? 1 : 0))
+7. 逗号,在$((...))内部是求值运算符，执行前后两个表达式，并返回后一个表达式的值。
+   echo $((foo = 1 + 2, 3 * 4))  # 逗号前后两个表达式都会执行，然后返回后一个表达式的值12。
+8. expr命令支持算术运算，可以不使用((...))语法。
+	expr 3 + 2  # 5  ,也不支持非整数参数。
+		
+
+
+搜索和替换
+字符串头部的模式匹配：
+	匹配模式pattern可以使用*、?、[]等通配符。
+	检查字符串开头，是否匹配给定的模式。如果匹配成功，就删除匹配的部分，返回剩下的部分。原始变量不会发生变化。
+	${variable#pattern}  #删除最短匹配（非贪婪匹配）的部分，返回剩余部分
+	${variable##pattern} #删除最长匹配（贪婪匹配）的部分，返回剩余部分
+$ myPath=/home/cam/book/long.file.name
+$ echo ${myPath#/*/}
+cam/book/long.file.name
+$ echo ${myPath##/*/}
+long.file.name
+
+echo ${path##*/}   #获取文件名
+long.file.name
+
+将头部匹配的部分，替换成其他内容，采用下面的写法
+${variable/#pattern/string}
+
+foo=JPG.JPG
+echo ${foo/#JPG/jpg}  #jpg.JPG
+
+
+字符串尾部的模式匹配：
+${variable%pattern}   # 删除最短匹配（非贪婪匹配）的部分，返回剩余部分
+${variable%%pattern}  # 删除最长匹配（贪婪匹配）的部分，返回剩余部分
+
+path=/home/cam/book/long.file.name
+echo ${path%.*}
+/home/cam/book/long.file
+
+echo ${path%%.*}
+/home/cam/book/long
+
+# 模式必须出现在字符串的结尾
+${variable/%pattern/string}
+
+任意位置的模式匹配：
+${variable/pattern/string}   # 最长匹配（贪婪匹配）的那部分被 string 替换，但仅替换第一个匹配
+${variable//pattern/string}  # 最长匹配（贪婪匹配）的那部分被 string 替换，所有匹配都替换
+
+将分隔符从:换成换行符
+echo -e ${PATH//:/'\n'}
+/usr/local/bin
+/usr/bin
+/bin
+...
+
+注意：
+${variable/#pattern/string}  # 模式必须出现在字符串的开头
+${variable/%pattern/string}  # 模式必须出现在字符串的结尾
+
+# 转为大写
+${varname^^}
+
+# 转为小写
+${varname,,}
+
+
+数组
+array=(1 33 56 7)
+取出单个：${array[0]}
+取出所有：${array[@]}
+遍历所有:
+for i in "${array[@]}";do echo $i ;done
+注意，为了避免歧义，for时用双引号包裹数组
+echo $array #默认读取的是索引为0的第一个元素
+array=999   #默认操作的是第一个元素
+数组长度:
+${#array[*]}
+${#array[@]}
+返回数组的成员序号，即哪些位置是有值的：
+${!array[@]}或${!array[*]}
+for i in ${!array[@]};do echo ${array[$i]} ;done
+提取数组成员：
+${array[@]:position:length}
+追加数组成员：
+array+=(999)
+unset删除数组
+unset array[1]
+或者 array[1]=''
+清空整个数组
+unset array
+
+关联数组
+declare -A 声明关联数组
+
+
+shopt
+查看所有参数，以及它们各自打开和关闭的状态。
+-s 用来打开某个参数
+-u 用来关闭某个参数。
+shopt -u histappend  关闭shell 的 history记录
+
+mktemp命令，就能生成一个临时文件，保证创建成功
+TMPFILE=$(mktemp) || exit 1
+
+mktemp
+	-d参数可以创建一个临时目录，默认$TMPDIR环境变量
+$ mktemp -d
+/tmp/tmp.Wcau5UjmN6
+	-p参数可以指定临时文件所在的目录
+$ mktemp -p /usr/local/src/
+/usr/local/src/tmp.FOKEtvs2H3	
+	-t参数可以指定临时文件的文件名模板，模板的末尾必须至少包含三个连续的X字符，表示随机字符，建议至少使用六个X。
+$ mktemp -t mytemp.XXXXXXX
+/tmp/mytemp.yZ1HgZV
+
+trap是一个脚本内的清场命令，注意，trap命令必须放在脚本的开头。
+trap [动作] [信号1] [信号2] ...
+trap -l 列出所有的系统信号。
+“信号”常用的有以下几个。
+HUP：编号1，脚本与所在的终端脱离联系。
+INT：编号2，用户按下 Ctrl + C，意图让脚本中止运行。
+QUIT：编号3，用户按下 Ctrl + 斜杠，意图退出脚本。
+KILL：编号9，该信号用于杀死进程。
+TERM：编号15，这是kill命令发出的默认信号。
+EXIT：编号0，这不是系统信号，而是 Bash 脚本特有的信号，不管什么情况，只要退出脚本就会产生。
+
+#!/bin/bash
+trap 'rm -f "$TMPFILE"' EXIT
+TMPFILE=$(mktemp) || exit 1
+ls /etc > $TMPFILE
+if grep -qi "kernel" $TMPFILE; then
+  echo 'find'
+fi
+
+如果trap需要触发多条命令，可以封装一个 Bash 函数。
+function egress {
+  command1
+  command2
+  command3
+}
+
+trap egress EXIT
+
+
+条件判断
+if commands; then
+  commands
+[elif commands; then
+  commands...]
+[else
+  commands]
+fi
+
+注:
+if后面有两条命令（false;true;），第二条命令（true）决定了then的部分是否会执行。 
+
+test 命令
+if结构的判断条件，一般使用test命令，有三种形式:
+# 写法一
+test expression
+
+# 写法二
+[ expression ]
+
+# 写法三，还支持正则判断，前两种不支持。
+[[ expression ]]   
+
+注：test命令执行成功（返回值为0），表达式为假，test命令执行失败（返回值为1）。注意，第二种和第三种写法，[和]与内部的表达式之间必须有空格，实际上，[这个字符是test命令的一种简写形式，可以看作是一个独立的命令，这解释了为什么它后面必须有空格.
+
+test -f /etc/hosts
+echo $?
+0
+
+[ -f /etc/hosts ]
+echo $?
+0
+
+文件判断
+以下表达式用来判断文件状态:
+[ -a file ]：如果 file 存在，则为true。
+[ -b file ]：如果 file 存在并且是一个块（设备）文件，则为true。
+[ -c file ]：如果 file 存在并且是一个字符（设备）文件，则为true。
+[ -d file ]：如果 file 存在并且是一个目录，则为true。
+[ -e file ]：如果 file 存在，则为true。
+[ -f file ]：如果 file 存在并且是一个普通文件，则为true。
+[ -g file ]：如果 file 存在并且设置了组 ID，则为true。
+[ -G file ]：如果 file 存在并且属于有效的组 ID，则为true。
+[ -h file ]：如果 file 存在并且是符号链接，则为true。
+[ -k file ]：如果 file 存在并且设置了它的“sticky bit”，则为true。
+[ -L file ]：如果 file 存在并且是一个符号链接，则为true。
+[ -N file ]：如果 file 存在并且自上次读取后已被修改，则为true。
+[ -O file ]：如果 file 存在并且属于有效的用户 ID，则为true。
+[ -p file ]：如果 file 存在并且是一个命名管道，则为true。
+[ -r file ]：如果 file 存在并且可读（当前用户有可读权限），则为true。
+[ -s file ]：如果 file 存在且其长度大于零，则为true。
+[ -S file ]：如果 file 存在且是一个网络 socket，则为true。
+[ -t fd ]：如果 fd 是一个文件描述符，并且重定向到终端，则为true。 这可以用来判断是否重定向了标准输入／输出错误。
+[ -u file ]：如果 file 存在并且设置了 setuid 位，则为true。
+[ -w file ]：如果 file 存在并且可写（当前用户拥有可写权限），则为true。
+[ -x file ]：如果 file 存在并且可执行（有效用户有执行／搜索权限），则为true。
+[ file1 -nt file2 ]：如果 FILE1 比 FILE2 的更新时间最近，或者 FILE1 存在而 FILE2 不存在，则为true。
+[ file1 -ot file2 ]：如果 FILE1 比 FILE2 的更新时间更旧，或者 FILE2 存在而 FILE1 不存在，则为true。
+[ FILE1 -ef FILE2 ]：如果 FILE1 和 FILE2 引用相同的设备和 inode 编号，则为true。
+
+字符串判断
+以下表达式用来判断字符串:
+[ string ]：如果string不为空（长度大于0），则判断为真。
+[ -n string ]：如果字符串string的长度大于零，则判断为真。
+[ -z string ]：如果字符串string的长度为零，则判断为真。
+[ string1 = string2 ]：如果string1和string2相同，则判断为真。
+[ string1 == string2 ] 等同于[ string1 = string2 ]。
+[ string1 != string2 ]：如果string1和string2不相同，则判断为真。
+[ string1 '>' string2 ]：如果按照字典顺序string1排列在string2之后，则判断为真。
+
+整数判断
+下面的表达式用于判断整数:
+[ integer1 -eq integer2 ]：如果integer1等于integer2，则为true。
+[ integer1 -ne integer2 ]：如果integer1不等于integer2，则为true。
+[ integer1 -le integer2 ]：如果integer1小于或等于integer2，则为true。
+[ integer1 -lt integer2 ]：如果integer1小于integer2，则为true。
+[ integer1 -ge integer2 ]：如果integer1大于或等于integer2，则为true。
+[ integer1 -gt integer2 ]：如果integer1大于integer2，则为true。
+
+正则判断
+[[ expression ]]这种判断形式，支持正则表达式
+[[ string1 =~ regex ]]    # regex是一个正则表示式，=~是正则比较运算符。
+
+综合实例：
+while true ;do
+read -p "请输入 > " num
+
+if [ -z "$num" ];then
+   echo "没有输入.."
+elif [[ "$num" =~ [0-9]+$ ]];then
+   echo "数字"
+else
+   echo "字符" 
+fi
+done
+
+
+算术判断
+((...))作为算术条件，进行算术运算的判断，注意，算术判断不需要使用test命令，而是直接使用((...))结构。这个结构的返回值，决定了判断的真伪。
+如果算术计算的结果是非零值，则表示判断成立。这一点跟命令的返回值正好相反。
+if ((1)); then echo "It is true."; fi
+It is true.
+if ((0)); then echo "It is true."; else echo "it is false."; fi
+It is false.
+
+算术条件((...))也可以用于变量赋值：
+if (( foo = 5 ));then echo "foo is $foo"; fi
+foo is 5
+
+普通命令的逻辑运算
+command1 && command2
+command1 || command2
+如：[ -d temp ] || mkdir temp
+
+
+case 结构
+case expression in
+  pattern )
+    commands ;;
+  pattern )
+    commands ;;
+  ...
+esac
+expression是一个表达式，pattern是表达式的值或者一个模式，可以有多条，用来匹配多个值，每条以两个分号（;）结尾。
+
+#!/bin/bash
+echo -n "输入一个1到3之间的数字（包含两端）> "
+read character
+case $character in
+  1 ) echo 1
+    ;;
+  2 ) echo 2
+    ;;
+  3 ) echo 3
+    ;;
+  * ) echo 输入不符合要求
+esac
+一般最后一条匹配语句的模式是*，这个通配符可以匹配其他字符和没有输入字符的情况。
+
+匹配模式可以使用各种通配符，下面是一些例子：
+a)：匹配a。
+a|b)：匹配a或b。
+[[:alpha:]])：匹配单个字母。
+???)：匹配3个字符的单词。
+*.txt)：匹配.txt结尾。
+*)：匹配任意输入，通过作为case结构的最后一个模式。
+
+
+while 循环
+while condition; do
+  commands
+done
+
+#!/bin/bash
+number=0
+while [ "$number" -lt 10 ]; do
+  echo "Number = $number"
+  number=$((number + 1))
+done
+
+until 循环
+until condition; do
+  commands
+done
+
+#!/bin/bash
+number=0
+until [ "$number" -ge 10 ]; do
+  echo "Number = $number"
+  number=$((number + 1))
+done
+
+
+for...in 循环，用于遍历列表的每一项。
+for variable in list
+do
+  commands
+done
+
+#!/bin/bash
+for i in word1 word2 word3; do
+  echo $i
+done
+word1 word2 word3是一个包含三个单词的列表，变量i依次等于word1、word2、word3，命令echo $i则会相应地执行三次。
+
+列表可以由通配符产生。
+for i in *.png; do
+  echo $i
+done
+
+in list的部分可以省略，这时list默认等于脚本的所有参数$@。
+for filename; do
+  echo "$filename"
+done
+
+# 等同于
+
+for filename in "$@" ; do
+  echo "$filename"
+done
+
+在函数体中也是一样的，for...in循环省略in list的部分，则list默认等于函数的所有参数。
+
+
+for 循环
+for (( expression1; expression2; expression3 )); do
+  commands
+done
+注意，循环条件放在双重圆括号之中。另外，圆括号之中使用变量，不必加上美元符号$。
+
+for (( i=0; i<5; i=i+1 )); do
+  echo $i
+done
+
+
+select 结构
+select结构主要用来生成简单的菜单。它的语法与for...in循环基本一致。
+select name [in list]
+do
+  commands
+done
+
+#!/bin/bash
+# select.sh
+
+select brand in Samsung Sony iphone symphony Walton
+do
+  echo "You have chosen $brand"
+done
+
+
+
+函数总是在当前Shell执行。
+如果函数与脚本同名，函数会优先执行。但是，函数的优先级不如别名，即如果函数与别名同名，那么别名优先执行。
+
+#!/bin/sh
+# 1 define
+function fun(){
+    echo "第一种定义函数的方法."
+    echo "获取函数的参数用\$1 ,第一参数 ："$1
+}
+# 调用
+fun 000
+
+# 2 define same as define 1
+function ff {
+   echo "类似第一种函数的定义，但缺少了括号"
+}
+# 调用
+ff
+
+
+# 3 define
+fn(){
+   echo "我的第二种定义函数的方法"
+   echo "接收两个参数: \$1="$1" , \$2="$2
+}
+# 调用
+fn 100 999
+
+
+删除一个函数
+unset -f  functionName
+
+查看当前 Shell 已经定义的所有函数（输出函数名，和定义）
+declare -f
+
+只输出已定义的函数名
+declare -F
+
+函数体内可以使用参数变量，获取函数参数。函数的参数变量，与脚本参数变量是一致的。
+$1~$9：函数的第一个到第9个的参数。
+$0：函数所在的脚本名。
+$#：函数的参数总数。
+$@：函数的全部参数，参数之间使用空格分隔。
+$*：函数的全部参数，参数之间使用变量$IFS值的第一个字符分隔，默认为空格，但是可以自定义。
+如果函数的参数多于9个，那么第10个参数可以用${10}的形式引用，以此类推。
+
+函数返回值返回给调用者。如果命令行直接执行函数，下一个命令可以用$?拿到返回值。
+
+
+全局变量和局部变量，local 命令
+在函数体内，local 定义的是局部变量。
+而在函数体内未用local定义的是全局变量，可以被函数体外脚本修改
+
+
+更多
+https://wangdoc.com/bash/intro.html
+
+
