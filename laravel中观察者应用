@@ -1,0 +1,107 @@
+laravel中观察者应用
+
+应用场景：
+使用观察者Observer，在模型中监听CURD事件，观察者类里的方法名应该反映 Eloquent 想监听的事件。 每个方法接受 model 作为唯一参数。
+
+使用artisan命令生成UserObserver类
+php artisan make:observer UserObserver  --model=User
+
+<?php
+
+namespace App\Observers;
+
+use App\User;
+
+class UserObserver
+{
+    /**
+     * Handle the user "created" event.
+     *
+     * @param  \App\User  $user
+     * @return void
+     */
+    public function created(User $user)
+    {
+        //
+    }
+
+    /**
+     * Handle the user "updated" event.
+     *
+     * @param  \App\User  $user
+     * @return void
+     */
+    public function updated(User $user)
+    {
+        //
+    }
+
+    /**
+     * Handle the user "deleted" event.
+     *
+     * @param  \App\User  $user
+     * @return void
+     */
+    public function deleted(User $user)
+    {
+        //
+    }
+
+    /**
+     * Handle the user "restored" event.
+     *
+     * @param  \App\User  $user
+     * @return void
+     */
+    public function restored(User $user)
+    {
+        //
+    }
+
+    /**
+     * Handle the user "force deleted" event.
+     *
+     * @param  \App\User  $user
+     * @return void
+     */
+    public function forceDeleted(User $user)
+    {
+        //
+    }
+}
+
+根据需要完善好业务逻辑后，注册这个观察者，此时需要用模型中的 observe 方法去观察，比如，可以在应用的服务提供者（AppServiceProvider）之一的 boot 方法中注册观察者
+<?php
+
+namespace App\Providers;
+
+use App\User;
+use App\Observers\UserObserver;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * 运行所有应用服务.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        User::observe(UserObserver::class);
+    }
+
+    /**
+     * 注册服务提供.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+    }
+}
+
+此后，当User模型中的CURD方法被调用时，会有对应的观察者去观察记录该被调用方法的过程。
+
+

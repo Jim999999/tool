@@ -1,0 +1,26 @@
+laravel 安装
+
+前提：环境已安装好composer
+	
+执行命令	
+composer create-project --prefer-dist laravel/laravel blog
+cd blog
+composer install
+cp .env.example .env
+
+生成应用密钥
+php artisan key:generate
+
+设置读写权限 storage 目录和 bootstrap/cache
+chmod 0777 storage -R
+chmod 0777 bootstrap/cache -R
+
+此时，即可访问到laravel的首页。
+
+
+Nginx配置
+location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+并在nginx.conf中加载 enable-php-pathinfo.conf

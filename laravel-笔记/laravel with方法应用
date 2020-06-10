@@ -1,0 +1,70 @@
+laravel with方法应用
+
+应用场景：一对多的关联关系中。
+作用：是为了避免N+1次的查询数据库， 从而提升查询的性能;
+
+分类model
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Category extends Model
+{
+    /**
+     * 分类下面的商品
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function goods()
+    {
+        return $this->hasMany(Good::class);
+    }
+}
+
+
+商品model
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Good extends Model
+{
+    /**
+     * 商品所属分类
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+}
+
+查询某个分类下的商品方法
+public function goods($categoryId)
+{
+     $category = Category::find($categoryId);
+     $goods    = $category->goods;
+     return $goods;
+}
+
+
+从同一个接口返回分类和属于该分类的商品，此刻就用到了with
+public function category($categoryId)
+{
+    $category = Category::with('goods')->find($categoryId);
+    return $category;
+}
+
+
+查询一个分类下已经上架的商品，用到了with另一方法
+public function category($categoryId)
+{
+    $category = Category::with(['goods'=>function($query){
+    	  $query->where('is_sale', 1);
+	}])->find($categoryId);
+    return $category;
+}
+
+
+

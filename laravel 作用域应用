@@ -1,0 +1,158 @@
+laravel 作用域应用
+
+分类为：分为全局作用域，和本地作用域。
+作用域作用：给模型的查询都添加上约束。
+
+全局作用域
+继承Illuminate\Database\Eloquent\Scope 接口的类，并实现 apply 方法。 根据需求，在 apply 加入查询的 where 约束：
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class AgeScope implements Scope
+{
+    /**
+     * 把约束加到 Eloquent 查询构造中.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    public function apply(Builder $builder, Model $model)
+    {
+        $builder->where('age', '>', 40);
+    }
+}
+
+注意，需要在 select 语句里添加字段，应使用 addSelect 方法，而不是 select 方法，否则会替换现有 select 语句。
+
+应用全局作用域
+在模型中重写 boot 方法并使用 addGlobalScope 方法即可应用全局作用域到模型：
+<?php
+
+namespace App;
+
+use App\Scopes\AgeScope;
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    /**
+     * 模型的「启动」方法
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new AgeScope);
+    }
+}
+之后，User::all() 的查询语句如下：
+select * from `users` where `age` > 40
+
+为了简写，也可在模型中用匿名函数：
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class User extends Model
+{
+    /**
+     * 模型的「启动」方法
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('age', function (Builder $builder) {
+            $builder->where('age', '>', 40);
+        });
+    }
+}
+
+取消全局作用域
+User::withoutGlobalScope(AgeScope::class)->get();
+全局作用域是闭包取消
+User::withoutGlobalScope('age')->get();
+// 取消全部作用域
+User::withoutGlobalScopes()->get();
+
+// 取消个别全局作用域
+User::withoutGlobalScopes([
+    FirstScope::class, SecondScope::class
+])->get();
+
+本地范围作用域
+在模型中，定义以scope为前缀的方法即可。如：
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    /**
+     * 只查询受欢迎的用户.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePopular($query)
+    {
+        return $query->where('votes', '>', 100);
+    }
+
+    /**
+     * 只查询 active 的用户.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('active', 1);
+    }
+}
+
+调用本地作用域
+$users = App\User::popular()->active()->orderBy('created_at')->get();
+
+也可传参形式（即是动态范围作用域），参数应该定义在 $query 参数后，此时定义时如下：
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    /**
+     * 查询只包含特定类型的用户.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param mixed $type
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeisAdmin($query, $type)
+    {
+        return $query->where('type', $type);
+    }
+}
+
+调用动态本地作用域
+$users = App\User::isAdmin('admin')->get();
+
+
+
