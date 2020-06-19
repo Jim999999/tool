@@ -1,0 +1,52 @@
+laravel 访问器 & 修改器
+
+访问器作用：在模型中定义某字段的获取形式。如，
+	/**
+     * 获取用户的名字。
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getFirstNameAttribute($value)
+    {
+        return ucfirst($value);
+    }
+
+此时，通过模型实例就可转化first_name字段为首字母大写形式，
+$user = App\User::find(1);
+$firstName = $user->first_name;
+
+/**
+ * 需使用「驼峰式」来命名
+ */
+public function getUserIdTimeAttribute(){
+   return  $this->user_id . "=>" .$this->created_at;
+}
+
+$data = Images::with('house:id,name')->first();
+dd($data->user_id_time);
+
+
+修改器作用：在模型上定义一个 setFooAttribute 方法，从而可通过模型来设置字段 Foo 的值。
+/**
+ * 设定用户的名字。
+ *
+ * @param  string  $value
+ * @return void
+ */
+public function setFirstNameAttribute($value)
+{
+	$this->attributes['first_name'] = strtolower($value);
+}
+
+调用设置first_name
+$user = App\User::find(1);
+$user->first_name = 'Sally';
+
+
+
+
+
+
+
+

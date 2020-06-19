@@ -1,0 +1,156 @@
+laravel Event事件 和事件处理器(事件监听器)Listeners
+
+概念：
+事件是一种常见的观察者模式的应用。
+含义：当 (event)... 然后(干) (listener)...
+业务逻辑处理：事件event除了定义属性和注入事件参数外不做业务逻辑处理，而是交给事件处理器（即监听器listener）的handle方法来处理具体的业务逻辑。
+
+放置 event 和 listener 文件的位置
+app/Events
+app/Listeners
+
+定义
+用 Artisan 命令可以快速生成一个模板：
+php artisan make:event    UserEvent
+php artisan make:listener UserEventHandlerListener
+
+或者在App\Providers\EventServiceProvider 中$listen属性注册好关联后，用命令
+php artisan event:generate
+
+
+注册（绑定事件）
+在App\Providers\EventServiceProvider 中$listen属性中注册：
+/**
+ * 应用程序的事件监听器映射
+ *
+ * @var array
+ */
+protected $listen = [
+    'App\Events\UserEvent' => [
+        'App\Listeners\UserEventHandlerListener',
+    ],
+];
+
+或者 在 EventServiceProvider 类的 boot 方法中注册基于事件的闭包：
+/**
+ * 注册应用程序中的任何其它事件。
+ *
+ * @return void
+ */
+public function boot()
+{
+    parent::boot();
+
+    Event::listen('UserEvent', function($event){
+        // 处理事件...
+    });
+}
+
+
+触发（分发）
+Event::fire(new UserEvent($user)); //或者
+event(new UserEvent($user));
+
+将事件加入队列（延迟异步执行）
+事件处理（事件监听器）类UserEventHandlerListener implements ShouldQueue ，并trait InteractsWithQueue 即可手动调用delete 和 release 方法。
+<?php
+	namespace App\Listeners;
+	use App\Events\UserEvent;
+	use Illuminate\Queue\InteractsWithQueue;
+	use Illuminate\Contracts\Queue\ShouldQueue;
+	class UserEventHandlerListener implements ShouldQueue
+	{
+		use InteractsWithQueue;
+		public function handle(UserEvent $event)
+		{
+			if (true) {
+				$this->release(20);
+			}
+		}
+    }
+
+事件监听器的队列任务可能会失败，则会监听器上调用 failed 方法
+<?php
+	namespace App\Listeners;
+	use App\Events\UserEvent;
+	use Illuminate\Queue\InteractsWithQueue;
+	use Illuminate\Contracts\Queue\ShouldQueue;
+	class UserEventHandlerListener implements ShouldQueue
+	{
+		use InteractsWithQueue;
+		public function handle(UserEvent $event)
+		{
+			if (true) {
+				$this->release(20);
+			}
+		}
+		
+
+		/**
+		 * 失败事件处理器
+		 * @param  \App\Events\UserEvent  $event
+		 * @param  \Exception  $exception
+		 * @return void
+		 */
+		public function failed(UserEvent $event, $exception)
+		{
+			//
+		}		
+    }
+
+
+事件订阅 (Event Subscribers)
+把很多事件处理器（handler）放到一个类里面，然后用一个 listner 把它们集合起来，即是一种特殊的Listener。
+ <?php
+    namespace App\Listeners;
+    class UserEventListener
+    {
+		/**
+		* Handle user login events.
+		*/
+		public function onUserLogin($event) {}
+		/**
+		* Handle user logout events.
+		*/
+		public function onUserLogout($event) {}
+		/**
+		* Register the listeners for the subscriber.
+		*
+		* @param Illuminate\Events\Dispatcher $events
+		* @return array
+		*/
+		public function subscribe($events)
+		{
+			$events->listen(
+			'App\Events\UserLoggedIn',
+			'App\Listeners\UserEventListener@onUserLogin'
+			);
+			$events->listen(
+			'App\Events\UserLoggedOut',
+			'App\Listeners\UserEventListener@onUserLogout'
+			);
+		}
+    }
+最后，绑定Event Subscriber 到 App\Providers\EventServiceProvider
+	/**
+	 * The subscriber classes to register.
+	 *
+	 * @var array
+	 */
+	protected $subscribe = [
+		'App\Listeners\UserEventListener',
+	];
+
+或者，用 Event 类注册
+$subscriber = new UserEventListener;
+Event::subscribe($subscriber);
+
+或者，使用服务容器自动解析订阅者，传递订阅者的名字给 subscribe 方法即可
+Event::subscribe('UserEventListener');
+
+
+更详
+https://learnku.com/docs/laravel/5.6/events/1389#448dad
+https://learnku.com/articles/20712
+https://learnku.com/articles/28432
+https://www.ctolib.com/docs-laravel-c-events.html

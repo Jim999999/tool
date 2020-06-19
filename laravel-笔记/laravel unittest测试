@@ -1,0 +1,32 @@
+laravel unittest测试
+
+约定：
+测试文件名需要以 Test 作为后缀，比如如果要测试 First.php，则对应的测试文件名为 FirstTest.php；
+测试方法名需要以 test 作为前缀，比如如果要测试的方法名为 getuser，则对应的测试方法名为 testGetuser，此外，你还可以通过 @test 注解来声明一个测试方法；
+所有的测试方法可见性必须是 public；
+所有的测试类都继承自 PHPUnit\Framework\TestCase。
+
+创建一个测试用例:
+php artisan make:test UserTest    		#在 Feature 目录下创建一个测试类  -- 功能测试 --> laravel自有封装的测试脚手架测试方法
+php artisan make:test UserTest --unit   #在 Unit 目录下创建一个测试类	  -- 单元测试 --> phpunit方法
+
+
+运行测试前，清除配置信息缓存：
+php artisan config:clear 
+
+执行测试：
+./vendor/bin/phpunit
+
+指定要测试的测试用例：
+./vendor/bin/phpunit tests/Unit/ExampleTest.php
+
+通过测试套件执行，即运行tests/Unit目录下的所有测试文件：
+./vendor/bin/phpunit --testsuite=Unit
+
+生成报告文档：
+./vendor/bin/phpunit --coverage-html .   # 在根目录下生成 HTML 格式的测试覆盖率报告index.html ，[运行后没生成？？]
+
+
+
+https://xueyuanjun.com/post/19586.html
+断言方法：https://phpunit.readthedocs.io/zh_CN/latest/assertions.html

@@ -287,6 +287,12 @@ git push -u origin master -f
 https://xueyuanjun.com/books/api-driven-development-laravel-vue
 源码：https://github.com/nonfu/roastapp
 
+事件（Event）是一种『钩子』，事件监听器（Listeners），订阅者（一种特殊的Listeners），Laravel使用观察者（Observers）模式来实现这种监听机制.
+https://learnku.com/articles/20712
+
+
+
+
 
 let tc_close_coords = '500,0,600,85'; //关闭按钮描点
 let tc_chat_coords  = '0,320,600,430';//跳转按钮描点

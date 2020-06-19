@@ -1,0 +1,111 @@
+laravel （queue）队列
+
+作用：常用于两种场景，一种是高并发的情况，一种是耗时的操作。
+
+mysql作为队列，配置mysql的驱动
+1.修改配置.env文件设置 QUEUE_DRIVER=database
+2.修改config目录下queue.php中的database项的配置信息
+'database' => [
+'driver' => 'database',
+'table' => 'jobs',
+'queue' => 'default',
+'retry_after' => 90, //超时时间
+],
+
+3.生成创建队列表结构的文件
+php artisan queue:table 
+php artisan migrate --path=database\migrations\2020_06_16_032905_create_jobs_table.php
+生成列表执行失败后存储结构的文件
+php artisan queue:failed-table
+php artisan migrate --path=database\migrations\2020_06_16_153957_create_failed_jobs_table.php
+
+4.创建执行队列任务的工作类
+php artisan make:job testqueue
+
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+
+class testqueue implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+
+    protected $msg ;
+
+    /**
+     * Create a new job instance.
+     *
+     * @return void
+     */
+    public function __construct($msg)
+    {
+        //入队时，所带的参数
+        $this->msg = $msg;
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        //
+        \Log::info('queue start. get message :'.$this->msg);
+    }
+
+
+    /**
+     * 队列失败时，会触发该失败方法
+     */
+    public function failed(Exception $exception){
+        \Log::info('error :'.$exception->getMessage());
+    }
+}
+
+5.在控制器方法中触发
+\App\Jobs\TestQueue::dispatch('testing queue task '.time());
+6.此时，在jobs表里（这个jobs表名可以从queue配置文件中配置）插入一条数据
+7.执行队列任务，需要开启队列
+php artisan queue:work 
+或者
+php artisan queue:listen 
+执行命令参数
+php artisan queue:work --daemon  --queue=default --delay=3 --sleep=3 --tries=3
+
+
+redis作为队列，配置redis的驱动，重要两点
+1.修改配置.env文件设置 QUEUE_DRIVER=redis 即可，其原理是运用到了redis的list数据类型结构，无需配置queue table。
+2.安装redis驱动：composer require 'predis/predis ~1.0'
+
+
+注意事项：
+1、在修改 queue 相关代码后，必须要使用 php artisan queue:restart 来重启队列服务
+2、区别queue:work  和  queue:listen 。 queue:work 是daemon 守护进程模式（但需要使用Supervisor），queue:listen 前台挂着运行模式。
+https://www.cnblogs.com/eleven24/p/9348932.html
+
+
+说明
+https://zhuanlan.zhihu.com/p/70639068
+https://segmentfault.com/a/1190000016162121
+https://learnku.com/docs/laravel/5.6/queues/1395
+
+Beanstalk 是一个简单、快速的轻量级消息队列。Beanstalkd之于RabbitMQ，就好比Nginx之于Apache。
+https://segmentfault.com/a/1190000014803344
+
+SQS(Amazon Simple Queue Service) 是一项快速可靠、可扩展且完全托管的消息队列服务，收费的。
+https://www.jianshu.com/p/a1cc3ca2f41a
+https://aws.amazon.com/cn/sqs/
+
+redis数据库可视化工具（RedisDesktopManager）
+百度云网盘：https://pan.baidu.com/s/1eT1wjE3UwHYrRDVe5fio6A
+提取码：4v94
+替代品可以选择：treeNMS管理工具
+链接：https://pan.baidu.com/s/1gdrhkOpTEredaGfQckGrwQ，密码:9jyf

@@ -102,6 +102,26 @@ class AppServiceProvider extends ServiceProvider
     }
 }
 
+
+或者，在模型当中直接定义 boot 方法，进行同样的操作。
+public static function boot()
+{
+    parent::boot();
+    static::observe(new UserObserver());
+}
+
+
 此后，当User模型中的CURD方法被调用时，会有对应的观察者去观察记录该被调用方法的过程。
 
+应用场景：
+我们在做交易的时候，一笔订单从开始到结束有很多种状态，每种状态都会发相应的通知邮件。
+可以在订单更改保存后，触发saved事件，根据isDirty()和getDirty()来判断当前是否更改了状态及当前状态，发送相应的通知。
+public function saved($model)
+{
+	// 确定模型或给定属性是否已被修改。
+	$model->isDirty('status');
+	// 获取自上次同步以来已更改的属性
+	$model->getDirty();
+}
 
+https://learnku.com/articles/6657/model-events-and-observer-in-laravel

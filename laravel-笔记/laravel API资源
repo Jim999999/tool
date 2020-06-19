@@ -1,0 +1,145 @@
+laravel API资源
+
+调用命令在app/Http/Resources 文件夹下生成resource文件
+单个资源类（理解成处理一维数组）
+php artisan make:resource  UserResource        #单个资源类，继承自 Illuminate\Http\Resources\Json\JsonResource
+资源类集合（理解成处理多维数组）
+php artisan make:resource  UserCollection      #资源类集合，继承自 Illuminate\Http\Resources\Json\ResourceCollection
+php artisan make:resource  Users --collection
+
+
+单个资源类（理解成处理一维数组）
+<?php
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class UserResource extends JsonResource
+{
+    /**
+     * 将资源转换成数组。
+     *
+     * @param  \Illuminate\Http\Request
+     * @return array
+     */
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+        ];
+    }
+}
+
+
+资源类集合（理解成处理多维数组）
+<?php
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class UserCollection extends ResourceCollection
+{
+    /**
+     * 将资源集合转换成数组
+     *
+     * @param  \Illuminate\Http\Request
+     * @return array
+     */
+    public function toArray($request)
+    {
+        return [
+            'data' => $this->collection,
+            'links' => [
+                'self' => 'link-value',
+            ],
+        ];
+    }
+}
+
+注意，资源类中，$this 变量来访问模型属性，并隐含有两个方法：with，withResponse
+
+
+资源类的调用
+
+在路由或控制器中返回已定义的资源：
+Route::get('/user', function () {
+    return new UserResource(User::find(2));
+});
+
+或者，在路由或控制器中使用 collection 方法来创建资源实例，以返回多个资源的集合或分页响应：
+Route::get('/user', function () {
+    return new UserCollection(User::all());
+});
+
+或者，返回的是分页数据，并在header中设置自定义参数
+Route::get('/user', function () {
+    return (new UserCollection(Images::select(['id','user_id','path'])->paginate()))
+            ->response()->header('X-Route', 'Route中调用');
+});
+
+
+资源是将单个模型转换成数组，而资源集合是将多个模型的集合转换成数组。
+所有的资源都提供了一个 collection 方法来生成一个 “临时” 资源集合，所以你没有必要为每一个模型类型都编写一个资源集合类：
+Route::get('/user', function () {
+    return UserResource::collection(User::all());
+});
+
+
+一个完整的资源集合
+<?php
+namespace App\Http\Resources;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+class UserCollection extends ResourceCollection
+{
+    /**
+     * Transform the resource collection into an array.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    public function toArray($request)
+    {
+        //return parent::toArray($request);
+        return [
+            'data' => $this->collection,
+            // 'links' => [
+            //     'self' => 'link-value',
+            // ],
+          
+        ];
+    }
+
+
+    /**
+     * 和资源一起返回的其他数据数组。
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @return array
+     */
+    public function with($request)
+    {
+        return [
+            // 'meta' => [
+            //     'key' => 'value',
+            // ],
+        ];
+    }
+
+
+    /**
+     * 自定义资源响应
+     *
+     * @param  \Illuminate\Http\Request
+     * @param  \Illuminate\Http\Response
+     * @return void
+     */
+    public function withResponse($request, $response)
+    {
+        $response->header('X-Response', 'UserCollection中调用');
+    }
+
+}
+
+
+更多 https://learnku.com/docs/laravel/5.6/eloquent-resources/1407
