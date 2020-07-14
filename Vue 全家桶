@@ -1,0 +1,409 @@
+Vue 全家桶
+
+vue全家桶：vue + vuex (状态管理) + vue-router (路由) + vue-resource + axios +UI框架（iview、vant、elementUI等等）
+概括起来就是：、1.项目构建工具、2.路由、3.状态管理、4.http请求工具。
+两大核心思想：组件化和数据驱动。组件化：把整体拆分为各个可以复用的个体，数据驱动：通过数据变化直接影响bom展示，避免dom操作。
+
+Vue-cli是快速构建单页应用的脚手架
+# 全局安装 vue-cli
+$ npm install --global vue-cli 或 npm install -g @vue/cli 卸载npm uninstall -g @vue/cli
+# 创建一个基于 webpack 模板的新项目
+$ vue init webpack myproject
+# 安装依赖，走你
+$ cd myproject
+$ npm install
+$ npm run dev
+
+注，如初始化不成功，需切换镜像地址
+查看原来的镜像地址：
+npm get registry
+换成淘宝镜像
+npm config set registry http://registry.npm.taobao.org/
+换成淘宝npm
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+如，vue无法识别，则需添加环境变量到path中
+C:\Users\Administrator\AppData\Roaming\npm
+
+vue-router
+安装：npm installvue-router
+在一个模块化工程中使用它，必须要通过 Vue.use() 明确地安装路由功能
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+Vue.use(VueRouter)
+
+$route 和 $router 的区别
+$route  是“路由信息对象”，包括 path，params，hash，query，fullPath，matched，name 等路由信息参数。
+$router 是“路由实例”对象，即使用 new VueRouter创建的实例，包括了路由的跳转方法，钩子函数等。
+
+router的更多详解
+https://www.jianshu.com/p/4c5c99abb864
+
+传参：
+<router-link :to="{name:'HelloWorld', params:{class:'No.1',addr:'guanzhou'}}">Hi页面传参</router-link>|
+
+接收参数：
+{{$route.params.addr}}
+{{$route.query.addr}}
+{{$route.name}}   #接收变量名为name的参数，name的定义是在router/index.js中的 routes 数组定义
+
+或 
+<router-link to="/params/aaa/bbb">Params</router-link>
+
+
+router/index.js 文件内容：
+import Vue from 'vue'
+import Router from 'vue-router'
+import HelloWorld from '@/components/HelloWorld'
+import Hi from '@/components/Hi'
+import Hi1 from '@/components/Hi-1'
+import Hi2 from '@/components/Hi-2'
+import Hi21 from '@/components/Hi-2-1'
+import Error from '@/components/Error'
+import Params from '@/components/Params'
+
+Vue.use(Router)
+
+export default new Router({
+    routes: [{
+        path: '/',
+        name: 'HelloWorld',
+        // components:{default:HelloWorld,left:Hi2,right:Hi1} , //路由后 解析多组件（模板）
+        component: HelloWorld
+    }, {
+        path: '/hi', // router-link 的 to 用到
+        name: 'Hi', //router-link 传参时， 属性 to 用到
+        component: Hi, //路由后 解析的模板
+        alias:'/gethi',//取别名
+		children: [
+            { path: 'hi1', name: 'Hi1', component: Hi1 },
+            { path: 'hi2', name: 'Hi2', component: Hi2, children: [{ path: 'hi21', name: "hi21", component: Hi21 }] }
+        ]
+    }, {
+        path: '/params/:newsId(\\d+)/:newsTitle',  //router-link 传参，用占位符替换 （可用正则），获取参数: {{$route.params.newsId}} - {{$route.params.newsTitle}}
+        name: 'params', 
+        component: Params 
+
+    }, {
+        path: '/gotoparams/:newsId(\\d+)/:newsTitle',
+        redirect: '/params/:newsId(\\d+)/:newsTitle' //redirect 时带参数。
+    }, {
+        path: '*', //所有路由不匹配时，会匹配这
+        component: Error,
+    }]
+})
+
+redirect：仔细观察URL，redirect是直接改变了url的值，把url变成了真实的path路径。
+alias：URL路径没有别改变，这种情况更友好，让用户知道自己访问的路径，只是改变了<router-view>中的内容。
+
+跳转时有过渡效果
+<transition name="fade">
+ <router-view></router-view>
+</transition>
+.fade-enter {
+  opacity:0;
+}
+.fade-leave{
+  opacity:1;
+}
+.fade-enter-active{
+  transition:opacity .5s;
+}
+.fade-leave-active{
+  opacity:0;
+  transition:opacity .5s;
+}
+
+
+
+vuex
+专门为vue.js应用程序开发的状态管理可以理解为全局的数据管理。
+vuex 由五部分组成：state、action、mutation、getters、module组成。
+使用流程是：组件中可以直接调用除了module的其他四个部分。
+在src目录下，创建vuex目录，并创建store.js文件，此时，，store.js文件即有state、action、mutation、getters、module属性：
+
+----------- store.js start ----------------
+import Vue from 'vue';
+import Vuex from 'vuex';
+import axios from 'axios';
+
+
+Vue.use(Vuex); //vue 加载vuex模块
+
+
+//定义对象state状态
+const state = {
+    count: 1,
+    products: {
+        date: '2020-7-2 11:30',
+        name: 'apple',
+        seller: 'jd',
+        price: '￥5000',
+        addr: '广州天河',
+        num: 12,
+        color: 'red'
+    },
+    them: []
+}
+
+//state数据输出前调用
+const getters = {
+    count(state) {
+        return state.count += 10; //不管调用的是add ，还是reduce，都会调用到
+    }
+}
+
+//同步请求，改变state
+//mutations 里的方法，可当做当前对象的commit()方法参数
+const mutations = {
+    add: (state, n) => {
+        state.count += n;
+    },
+    reduce(state) {
+        state.count--;
+    },
+    ggthem(state) {
+        axios.get('http://localhost/')
+            .then(function(res) {
+                state.them = res.data
+                console.log('from store :')
+                console.log(state.them)
+            })
+            .catch(function(error) {
+                console.log(error)
+            })
+    }
+}
+
+
+// 异步请求，改变state
+// 在组件中，可用dispatch调用，如 this.$store.dispatch('addAction');  
+const actions = {
+    addAction(context) { // context上下文对象，这里可以理解称store本身
+        context.commit('add', 10);
+        console.log('3s后异步调用reduce.')
+        setTimeout(() => {
+            context.commit('reduce');
+            console.log('在addAction中异步调用reduce..')
+        }, 3000);
+    },
+    reduceAction({ commit }) { // 直接把commit对象解构出来，可以让方法体逻辑和代码更清晰明了
+        commit('reduce');
+    },
+    // themAction({ commit }) {
+    //     commit('getThem');
+    // }
+
+}
+
+
+export default new Vuex.Store({
+    state,
+    mutations,
+    getters,
+    actions
+})
+----------- store.js end ----------------
+
+注意，在vue组件，导入 mapState, mapGetters, mapActions ,mapMutations 中一个或多个时要有大括号包裹，不然会报错，如，
+import { mapState, mapGetters, mapActions } from 'vuex'，例如在count 组件中：
+
+--------------- count.vue start ----------------------
+<template>
+  <div class="hello">
+    <h1>{{ msg }}</h1>
+    <!-- <div >接收count值：{{$store.state.count}}</div> 
+    <div><button @click="$store.commit('add',10)">+</button></div>
+    <div><button @click="$store.commit('reduce')">-</button></div>-->
+
+   <div> -------------  同步  mapMutations  -----------</div>
+    <div >接收count值：{{count}}</div>
+    <div><button @click="add(10)">+</button></div>
+    <div><button @click="reduce">-</button></div>
+
+    <div> ------------- 异步  mapActions  -----------</div>
+    <div >接收count值：{{count}}</div> 
+    <div><button @click="addAction(10)">+</button></div>
+    <div><button @click="reduceAction">-</button></div>
+
+  </div>
+  
+</template>
+
+<script>
+// 1.导入store
+import store from '@/vuex/store'
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex' //注意这种写法，多行写时也要用大括号包裹
+
+export default {
+  name: 'count',
+  data () {
+    return {
+      msg: 'Welcome to count page',
+	  them:[]
+    }
+  },
+  // 2.引入store
+  store,   // ggthem - 1.引入 store实例对象
+  created(){
+	//初始化
+	// console.log(333)
+	//this.add();
+	this.ggthem()  // ggthem - 3. 调用store.js 里的mutations方法
+
+    //this.$store.commit('ggthem')        //同步
+    //this.$store.dispatch('themAction'); //异步
+  },
+  computed:{
+      ...mapState(["count"]),   // （...）对象的扩展运算符
+      ...mapGetters(["count"]), // 无论任何方法调用，在输出count之前（含初始化），都会调用getters里的方法
+      // count(){
+      //   return this.$store.getters.count;
+      // },
+    
+      // products(){
+      //   return this.$store.state.products
+      // },
+
+  },
+  // methods:mapMutations(["add","reduce"]),
+  methods:{
+     ...mapMutations(["add","reduce","ggthem"]),   // ggthem - 2 . 在methods 里引入 ggthem
+  
+    //...mapActions(["addAction","reduceAction"]),
+    addAction:function(){
+      return this.$store.dispatch('addAction');    // dispatch分发store.js里actions方法 addAction
+    },
+    reduceAction:function(){
+      return this.$store.dispatch('reduceAction');  // dispatch分发store.js里actions方法 reduceAction
+    },
+	
+	
+	// ggthem - 4 .或者直接axios调用外部接口 
+	gthem(){
+      let that = this;
+      axios.get('http://localhost/').then(function(res){
+        that.them = res.data
+        console.log(res)
+      }).catch(function(err){
+        console.log(err)
+      })
+    }
+	
+  },
+  //监控count值
+  // watch:{
+  //   count:function(newVal,oldVal){
+  //     console.log('new值为:'+newVal)
+  //     console.log('old值为:'+oldVal)
+  //   }
+  // },
+  beforeCreate: function () {
+      console.log('1-beforeCreate 初始化之前');
+  },
+  created: function () {
+	console.log('2-created 初始化页面 ');
+  },
+  beforeMount: function () {
+  console.log('3-beforeMount 挂载之前');
+  },
+  mounted: function () {
+  console.log('4-mounted 挂载之后');
+  },
+  beforeUpdate: function () {
+  console.log('5-beforeUpdate 数据更新前');
+  },
+  updated: function () {
+  console.log('6-updated 被更新后');
+  },
+  activated: function () {
+  console.log('7-activated');
+  },
+  deactivated: function () {
+  console.log('8-deactivated');
+  },
+  beforeDestroy: function () {
+  console.log('9-beforeDestroy 销毁之前');
+  },
+  destroyed: function () {
+  console.log('10-destroyed 销毁之后')
+  }
+  
+}
+
+//或者用实例的方式 监控
+// app.$watch('count',function(newVal,oldVal){
+//   console.log('用实例的方式')
+// });
+
+</script>
+
+--------------- count.vue end ----------------------
+
+axios
+是一个http请求包，vue官网推荐使用axios进行http调用。
+安装：
+npm install axios --save
+
+搭配UI框架如：iview（新版View UI）、vant、elementUI
+iview 一套基于 Vue的高质量UI 组件库(分为小程序和pc端等不同版本)；
+vant 轻量、可靠的移动端 Vue 组件库,是有赞开源的一套基于 Vue 2.0 的 Mobile 组件库,旨在更快、更简单地开发基于 Vue 的美观易用的移动站点。
+Ant Design Vue 是 Ant Design 的 Vue 实现，开发和服务于企业级后台产品。
+elementUI 是基于 Vue 2.0 桌面端中后台组件库。
+http://www.axios-js.com/zh-cn/docs/
+
+
+初始化后的文件目录
+|-- build                                // 项目构建(webpack)相关代码
+|   |-- build.js                     　　// 生产环境构建代码
+|   |-- check-version.js             　　// 检查node、npm等版本
+|   |-- dev-client.js                　　// 热重载相关
+|   |-- dev-server.js                　　// 构建本地服务器
+|   |-- utils.js                     　　// 构建工具相关
+|   |-- webpack.base.conf.js         　　// webpack基础配置
+|   |-- webpack.dev.conf.js          　　// webpack开发环境配置
+|   |-- webpack.prod.conf.js         　　// webpack生产环境配置
+|-- config                               // 项目开发环境配置
+|   |-- dev.env.js                       // 开发环境变量
+|   |-- index.js                     　　// 项目一些配置变量
+|   |-- prod.env.js                  　　// 生产环境变量
+|   |-- test.env.js                  　　// 测试环境变量
+|-- node_modules                         // 项目开用到的包（可忽略）
+|-- src                                  // 源码目录
+|   |-- assets                   　　	 // assets是静态文件目录，如logo图等
+|   |-- components                   　　// vue公共组件
+|   |-- router                   　　	 // router路由文件目录
+|   |-- store                        　　// vuex的状态管理
+|   |-- App.vue                      　　// 页面入口文件
+|   |-- main.js                      　　// 程序入口文件，加载各种公共组件
+|-- static                               // 静态文件，比如一些图片，json数据等
+|   |-- data                         　　// 群聊分析得到的数据用于数据可视化
+|-- .babelrc                         // ES6语法编译配置
+|-- .editorconfig                    // 定义代码格式
+|-- .gitignore                       // git上传需要忽略的文件格式
+|-- README.md                        // 项目说明
+|-- favicon.ico 
+|-- index.html                       // 入口页面
+|-- package.json                     // 项目基本信息
+
+
+测试源码
+https://gitee.com/jin3395/vue-codetesting.git
+
+
+打包注意事项
+修改config/index.js中build的 assetsPublicPath 为 "/" ,若想在本地打开打包后的文件可改为 "./"
+
+
+初始化项目
+https://www.cnblogs.com/xiaoqiong-li/articles/10882330.html
+https://www.cnblogs.com/wyt007/p/10422316.html
+https://www.cnblogs.com/wyt007/p/10268655.html
+
+单页面的刷新问题
+https://www.jianshu.com/p/91a3bd6060c4
+
+
+案例
+https://github.com/bailicangdu/vue2-happyfri
+
+

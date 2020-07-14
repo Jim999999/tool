@@ -84,6 +84,8 @@ php artisan queue:work --daemon  --queue=default --delay=3 --sleep=3 --tries=3
 redis作为队列，配置redis的驱动，重要两点
 1.修改配置.env文件设置 QUEUE_DRIVER=redis 即可，其原理是运用到了redis的list数据类型结构，无需配置queue table。
 2.安装redis驱动：composer require 'predis/predis ~1.0'
+3.可用delay来 延迟分发任务 TestQueue::dispatch($msg)->delay(now()->addMinutes(10));
+              
 
 
 注意事项：
@@ -109,3 +111,11 @@ redis数据库可视化工具（RedisDesktopManager）
 提取码：4v94
 替代品可以选择：treeNMS管理工具
 链接：https://pan.baidu.com/s/1gdrhkOpTEredaGfQckGrwQ，密码:9jyf
+
+
+延时队列
+延时队列(redis zset score作为时间戳)
+
+
+
+

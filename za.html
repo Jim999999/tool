@@ -50,12 +50,13 @@ composer create-project laravel/laravel
 https://learnku.com/docs/laravel/5.6
 
 
-延时队列
+延时队列(redis zset score作为时间戳)
 https://github.com/chenlinzhong/php-delayqueue
 
 git高级操作
 撤销未add的修改[删除]
-git checkout . [或 filename]
+git checkout . [或 ]
+git checkout -- filename
 
 撤销从add中的修改[删除]
 git reset HEAD filename     
@@ -70,14 +71,6 @@ git reset --soft commit-id      撤销已commit的代码，此时本地修改的
 git reset HEAD~n[或 commit-id]  n（1,2..）,然后，
 git checkout . [或 filename]    撤销所有修改回到未add，强制push
 git push -f
-
-
-
-克隆tp5仓库
-git clone https://github.com/top-think/think tp5  
-然后切换到tp5目录继续克隆核心框架仓库
-git clone https://github.com/top-think/framework thinkphp
-注意,两次clone后 ,都切换分支到master上，再删除掉.git .gitignore 文件
 
 
 [init]
@@ -97,12 +90,27 @@ git config --global credential.helper store
 查看本地环境配置
 git config --list
 
+.gitignore不能忽略到文件的问题
+.gitignore只能忽略原来没有被跟踪的文件，因此跟踪过的文件是无法被忽略的。
+解决方法就是先把本地缓存删除（改变成未track状态），然后再提交:
+git rm -r --cached .
+git add .
+git commit -m 'update .gitignore'
+
 
 清除git用户名密码：
 git config --system --unset credential.helper
 
 git日常操作指令
 https://www.jianshu.com/p/c34a80b8d0ae
+
+
+克隆tp5仓库
+git clone https://github.com/top-think/think tp5  
+然后切换到tp5目录继续克隆核心框架仓库
+git clone https://github.com/top-think/framework thinkphp
+注意,两次clone后 ,都切换分支到master上，再删除掉.git .gitignore 文件
+
 
 
 Linux 文件隐藏属性 
@@ -245,9 +253,9 @@ composer.json中:
 
 RabbitMQ+PHP消息队列
 从本质上说消息对列就是一个队列结构的中间件，也就是说消息放入这个中间件之后就可以直接返回，并不需要系统立即处理，而另外会有一个程序读取这些数据，并按顺序进行逐次处理。
+轻量级队列：beanstalkd, Amazon SQS, redis, database
 
-install
-https://www.jianshu.com/p/a28ecc3209ed
+
 
 来源：
 https://www.cnblogs.com/fengyumeng/p/11133924.html

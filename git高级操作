@@ -1,0 +1,54 @@
+git高级操作
+撤销未add的修改[删除]
+git checkout . [或 ]
+git checkout -- filename
+
+撤销从add中的修改[删除]
+git reset HEAD filename     
+git checkout . [或 filename]    再执行该命令恢复到未add的修改[删除]
+
+撤销已commit的代码，此时本地修改的代码也会被恢复[删除]
+git log --pretty=oneline
+git reset --hard commit-id
+git reset --soft commit-id      撤销已commit的代码，此时本地修改的代码还存在
+
+撤销已push远程的代码
+git reset HEAD~n[或 commit-id]  n（1,2..）,然后，
+git checkout . [或 filename]    撤销所有修改回到未add，强制push
+git push -f
+
+
+[init]
+echo "# tp5" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin  /home/wwwroot/git/tp5.git   # 这一步如果出错 fatal: remote origin already exists. 可先执行 git remote rm origin
+git push -u origin master
+
+
+git默认账户密码：        
+git config --global credential.helper store
+之后输入一次账号密码即可
+
+
+查看本地环境配置
+git config --list
+
+.gitignore不能忽略到文件的问题
+.gitignore只能忽略原来没有被跟踪的文件，因此跟踪过的文件是无法被忽略的。
+解决方法就是先把本地缓存删除（改变成未track状态），然后再提交:
+git rm -r --cached .
+git add .
+git commit -m 'update .gitignore'
+git push
+
+或是
+git update-index --assume-unchanged PATH  在PATH处输入要忽略的文件
+
+
+清除git用户名密码：
+git config --system --unset credential.helper
+
+git日常操作指令
+https://www.jianshu.com/p/c34a80b8d0ae
