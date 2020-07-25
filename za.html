@@ -558,6 +558,8 @@ npm update <package>  更新模块
 npm search <package>  搜索模块 
 npm help <command>    看某条命令的详细帮助
 npm cache clear       清空NPM本地缓存 
+npm uninstall <package> -g|S|D|O 卸载删除已安装的包
+
 
 exports 和 module.exports 的使用
 如果要对外暴露属性或方法，就用 exports 就行，要暴露对象(类似class，包含了很多属性和方法)，就用 module.exports。
@@ -576,6 +578,64 @@ module.exports.people = {
 //引用
 const people = require('./people')
 console.log(people.name)
+
+//当前脚本的绝对路径; 如果在模块中，返回的值是模块文件的路径
+console.log(__filename)
+//当前执行脚本所在的目录
+console.log(__dirname)
+
+Express 应用程序生成器
+mkdir testapp && cd testapp
+1.通过 npx （包含在 Node.js 8.2.0 及更高版本中）
+$ npx express-generator
+npx: 10 安装成功，用时 1.593 秒
+
+  warning: the default view engine will not be jade in future releases
+  warning: use `--view=jade' or `--help' for additional options
+
+   create : public\
+   create : public\javascripts\
+   create : public\images\
+   create : public\stylesheets\
+   create : public\stylesheets\style.css
+   create : routes\
+   create : routes\index.js
+   create : routes\users.js
+   create : views\
+   create : views\error.jade
+   create : views\index.jade
+   create : views\layout.jade
+   create : app.js
+   create : package.json
+   create : bin\
+   create : bin\www
+
+   install dependencies:
+     $ npm install
+
+   run the app:
+     $ DEBUG=app:* npm start
+
+2. npm install 拉取模块包
+3. MacOS 或 Linux 中，通过如下命令启动此应用：
+$ DEBUG=testapp:* npm start
+在 Windows 中
+> set DEBUG=testapp:* & npm start
+
+4.用nodemon自动更新替代node启动app
+nodemon ./bin/www
+
+5.默认3000端口
+在浏览器中打开 http://localhost:3000/
+https://www.expressjs.com.cn/starter/generator.html
+
+koa2
+https://segmentfault.com/a/1190000018241491
+https://www.jianshu.com/p/e0fd2bf0590f
+
+
+
+
 
 
 
