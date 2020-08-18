@@ -560,6 +560,9 @@ npm help <command>    看某条命令的详细帮助
 npm cache clear       清空NPM本地缓存 
 npm uninstall <package> -g|S|D|O 卸载删除已安装的包
 
+node脚本修改后，热启动node服务，用nodemon包来管理
+nodemon service.js
+
 
 exports 和 module.exports 的使用
 如果要对外暴露属性或方法，就用 exports 就行，要暴露对象(类似class，包含了很多属性和方法)，就用 module.exports。
@@ -630,8 +633,99 @@ nodemon ./bin/www
 https://www.expressjs.com.cn/starter/generator.html
 
 koa2
+ * 注意
+ * 1.在use内的异步函数体内 await next() 调用下一个中间件；
+ * 2.use koa-bodyparser 务必写在 use router之前
 https://segmentfault.com/a/1190000018241491
 https://www.jianshu.com/p/e0fd2bf0590f
+
+koa2模板引擎ejs ,或 Nunjucks
+npm install koa-views
+npm install ejs
+
+//配置模板引擎中间件
+app.use(views('views', {
+    extension: 'ejs'
+}));
+
+
+引入静态包管理 koa-static 模块
+npm install koa-static
+
+//配置静态资源中间件,或写成 app.use(static("./static"))
+app.use(static(__dirname + "static"));
+
+
+
+egg.js
+1.安装
+mkdir egg-test  && cd egg-test
+npm init egg --type=simple
+npm install 或 npm i
+
+启动 
+npm run dev
+
+配置模板引擎
+npm install egg-view-nunjucks
+
+//改 config/plugin.js
+ nunjucks: {
+        enable: true,
+        package: 'egg-view-nunjucks'
+    }
+
+//改 config/config.default.js
+ //设置默认模板引擎
+    config.view = {
+        defaultViewEngine: 'nunjucks',
+        mapping: {
+            '.html': 'nunjucks',
+        },
+    }
+注意：是 config 目录，不是 app/config!
+
+ctx.request.query.id 和 ctx.query.id 是等价的，ctx.response.body= 和 ctx.body= 是等价的。而获取 POST 的 body 应该使用 ctx.request.body，而不是 ctx.body。
+
+路径
+__dirname 　　 表示当前文件所在的目录的绝对路径
+__filename 　　表示当前文件的绝对路径
+module.filename ==== __filename 等价
+process.cwd() 　　 返回运行当前脚本的工作目录的路径，一般情况下不变，在process.chdir()后，或者shelljs.cd切换目录后会发生变化
+process.chdir() 　 改变工作目录
+https://www.cnblogs.com/mengff/p/9753867.html
+
+context简写为ctx 上下文
+middleware , extend/request|reponse 中 this 就是 ctx，例如 this.cookies.get('foo')。
+controller 中有两种写法，类的写法通过 this.ctx，方法的写法直接通过 ctx 入参。
+helper，service 中的 this 指向 helper，service 对象本身，使用 this.ctx 访问 context 对象，例如 this.ctx.cookies.get('foo')。
+
+使用 logger 模块
+// controller
+this.logger.debug('current user: %j', this.user);
+// service
+this.ctx.logger.debug('debug info from service');
+// app/init.js
+app.logger.debug('app init');
+https://eggjs.org/zh-cn/core/logger.html
+
+
+npx（node自带或者npm install -g npx）
+作用：解决的主要问题是调用项目内部安装的模块 。原理很简单，就是运行的时候，会到node_modules/.bin路径和环境变量$PATH里面，检查命令是否存在。
+http://www.ruanyifeng.com/blog/2019/02/npx.html
+
+mocha测试库
+http://www.ruanyifeng.com/blog/2015/12/a-mocha-tutorial-of-examples.html
+
+
+
+
+
+
+
+
+
+
 
 
 

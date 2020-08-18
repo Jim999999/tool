@@ -134,10 +134,5 @@ router.get('/:id', async(ctx, next) => {
 })
 
 
-
-
-
-
-
 app.listen(port)
 console.log('run on http://127.0.0.1:' + port)
