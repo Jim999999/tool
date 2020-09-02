@@ -1,0 +1,499 @@
+Java由SUN公司（已被Oracle收购）的詹姆斯·高斯林（高司令，人称Java之父）在上个世纪90年代初开发的，最初被命名为Oak。
+推荐的Java学习路线图：
+首先要学习Java SE，掌握Java语言本身、Java核心开发技术以及Java标准库的使用；
+如果继续学习Java EE，那么Spring框架、数据库开发、分布式架构就是需要学习的；
+如果要学习大数据开发，那么Hadoop、Spark、Flink这些大数据平台就是需要学习的，他们都基于Java或Scala开发；
+如果想要学习移动开发，那么就深入Android平台，掌握Android App开发。
+无论怎么选择，Java SE的核心技术是基础，这个教程的目的就是让你完全精通Java SE！
+
+JDK：Java Development Kit  （编译成Java字节码，JDK除了包含JRE，还提供了编译器、调试器等开发工具。）
+JRE：Java Runtime Environment （运行Java字节码的虚拟机）
+  ┌─    ┌──────────────────────────────────┐
+  │     │     Compiler, debugger, etc.     │
+  │     └──────────────────────────────────┘
+ JDK ┌─ ┌──────────────────────────────────┐
+  │  │  │                                  │
+  │ JRE │      JVM + Runtime Library       │
+  │  │  │                                  │
+  └─ └─ └──────────────────────────────────┘
+        ┌───────┐┌───────┐┌───────┐┌───────┐
+        │Windows││ Linux ││ macOS ││others │
+        └───────┘└───────┘└───────┘└───────┘
+
+jdk下载
+https://www.oracle.com/java/technologies/javase-jdk14-downloads.html
+	
+JSR规范：Java Specification Request （一系列的规范）
+JCP组织：Java Community Process （负责审核JSR的组织）
+
+RI：Reference Implementation  （参考实现）
+TCK：Technology Compatibility Kit（兼容性测试套件）
+	
+java：这个可执行程序其实就是JVM，运行Java程序，就是启动JVM，然后让JVM执行指定的编译后的代码；
+javac：这是Java的编译器，它用于把Java源码文件（以.java后缀结尾）编译为Java字节码文件（以.class后缀结尾）；
+jar：用于把一组.class文件打包成一个.jar文件，便于发布；
+javadoc：用于从Java源码中自动提取注释并生成文档；
+jdb：Java调试器，用于开发阶段的运行调试。
+
+三个不同版本：
+Java SE：Standard Edition （标准版）
+Java EE：Enterprise Edition （企业版，在Java SE的基础上加上了大量的API和库）
+Java ME：Micro Edition （瘦身版）
+
+在Java中，变量分为两种：基本类型的变量和引用类型的变量:
+
+基本数据类型
+整数类型：byte，short（2个byte），int（4个byte），long（8个byte）
+	计算机内存的最小存储单元是字节（byte），一个字节（byte）就是一个8位二进制数，即8个bit。它的二进制表示范围从00000000~11111111，换算成十进制是0~255，换算成十六进制是00~ff。
+	一个字节是1byte，1024字节是1K，1024K是1M，1024M是1G，1024G是1T。
+	byte：-128 ~ 127
+	short: -32768 ~ 32767
+	int: -2147483648 ~ 2147483647
+	long: -9223372036854775808 ~ 9223372036854775807
+	
+浮点数类型：float（4个byte），double（8个byte）
+字符类型：char（2个byte）
+布尔类型：boolean (true|false)
+
+引用类型
+最常用: String字符串
+
+常量
+加上final修饰符
+final double PI = 3.14; // PI是一个常量
+
+var关键字（避免了类型的名字太长)如，
+StringBuilder sb = new StringBuilder(); 等价于
+var sb = new StringBuilder();
+
+运算注意：
+1,两个整数的运算不会出现类型自动提升为float,或者double，从而会出现精度丢失，如：
+24/5 // 4 ,丢弃了小数位。
+解决的办法是提升任一整数为float 或 double类型
+(float)24/5 // 4.8
+
+2,整数运算在除数为0时会报错，而浮点数运算在除数为0时，不会报错，但会返回几个特殊值：
+NaN表示Not a Number
+Infinity表示无穷大
+-Infinity表示负无穷大
+
+3,正确比较两个浮点数方法是判断两个浮点数之差的绝对值r是否小于一个很小的数 0.00001
+4,将浮点数强制转型为整数，浮点数的小数部分会被丢掉,若转型后超过了整型能表示的最大范围，将返回整型的最大值。
+5,要进行四舍五入，可以对浮点数加上0.5再强制转型：
+ double d = 2.6;
+ int n = (int)(d + 0.5); // 3
+6,两个不同类型的数运算会报错。
+
+
+字符和字符串
+1,一个英文字符和一个中文字符都用一个char类型表示，都占用两个字节:
+char c1 = 'A';
+char c2 = '中';
+2,显示一个字符的Unicode编码，只需将char类型直接赋值给int类型即可：
+int n1 = 'A'; // 字母“A”的Unicodde编码是65
+int n2 = '中'; // 汉字“中”的Unicode编码是20013
+3,使用Unicode编码来表示一个字符：
+ char s = 22909;
+ System.out.println(s); //好
+
+ int a = 1232;
+ System.out.println((char)a);//int转为char
+
+
+// 注意是十六进制:
+char c3 = '\u0041'; // 'A'，因为十六进制0041 = 十进制65
+char c4 = '\u4e2d'; // '中'，因为十六进制4e2d = 十进制20013
+
+字符串类型String是引用类型,用双引号"xxx"包裹n个字符即表示字符串
+1,可以使用+连接任意字符串和其他数据类型;
+2,可以用"""xxxx"""表示多行字符串块（Text Blocks）;
+3,字符串除了是一个引用类型外，还有个重要特点，就是字符串不可变，而是改变变量的“指向”。
+	String s = "hello";
+	String t = s;
+	s = "world";
+	System.out.println(t); // t是"hello"
+4,空值null,它表示不存在，即该变量不指向任何对象。
+	String s1 = null;  // s1是null
+	String s2; 		   // 没有赋初值值，s2也是null
+	String s4 = "";    // s4指向空字符串，不是null
+5,不同类型之间比较会报错。
+6,char类型不能转为String类型，需要通过String.valueOf(char(2323))进行转换;
+7,char类型字符连接成字符串，需要在开始的位置连接上空字符串，如：
+  String s = "" + a + b +c  //a，b，c都是char字符，或者
+  String s = String.valueOf(a)+String.valueOf(b)+String.valueOf(c);
+8,注意单引号和双引号的区别，单引号通常定义constant常量，而双引号是定义是字符串。
+
+Java的数组有几个特点：
+0,数组是同一数据类型的集合;
+1,数组所有元素初始化为默认值，整型都是0，浮点型是0.0，布尔型是false；
+2,数组一旦创建后，大小就不可改变;
+3,数组索引从0开始,访问数组元素，使用索引;
+4,可以用 数组变量.length 获取数组大小;
+5,数组是引用类型，在使用索引访问数组元素时，如果索引超出范围，运行时将报错;
+6,数组元素可以是值类型（如int）或引用类型（如String）.
+
+数组定义
+int[] ns = new int[5];
+ns[0] = 68;
+ns[1] = 79;
+ns[2] = 91;
+ns[3] = 85;
+ns[4] = 62;
+
+数组长度
+ns.length
+
+在定义数组时直接指定初始化元素:
+ int[] ns = new int[] { 68, 79, 91, 85, 62 };
+ System.out.println(ns.length); // 编译器自动推算数组大小为5
+//简化
+ int[] ns = { 68, 79, 91, 85, 62 };
+
+字符串数组
+ String[] names = {"ABC", "XYZ", "zoo"};
+
+输出
+System.out.println(); //输出为一行，println是print line的缩写，表示输出并换行
+System.out.print();	  //输出不换行
+System.out.printf();  //格式化输出
+ double n = 3.1415926;
+ System.out.printf("%.2f\n", n); // 显示两位小数3.14
+	占位符	说明
+	%d	格式化输出整数
+	%x	格式化输出十六进制整数
+	%f	格式化输出浮点数
+	%e	格式化输出科学计数法表示的浮点数
+	%s	格式化字符串
+ 注意，由于%表示占位符，因此，连续两个%%表示一个%字符本身。
+ System.out.printf("n=%d, hex=%08x", n, n); // 格式化成十六进制，并用0补足8位 , n=101121, hex=00018b01
+
+判断语句
+if(){}else if(){}else{}
+
+判断值类型的变量是否相等，可以使用==运算符，但要注意判断浮点数时请用差值小于某个临界值来判断：
+    double x = 1 - 9.0 / 10;
+	Math.abs(x - 0.1) < 0.00001
+判断引用类型的变量是否相等，== 表示“引用是否相等”，或者说，是否指向同一个对象
+ String s1 = "hello";
+ String s2 = "HELLO".toLowerCase();
+ s1 == s2 // 结果为false
+
+要判断引用类型的变量内容是否相等，必须使用equals()方法：
+ s1.equals(s2); //为true
+ 注意：执行语句s1.equals(s2)时，如果变量s1为null，会报NullPointerException错误，此时可先判断s1是否为null来避免：
+ s1 != null && s1.equals(s2);
+ 或者，把不为null的变量写在前面，就不会报NullPointerException错误，如：
+ "hello".equals(s1) // s1=null ，为false
+
+switch 语句
+switch(){
+	case 1 :
+	  System.out.print("ssss");
+	  break;
+	case 2 :
+	  System.out.print("ssss");
+	  break;
+	...
+    default :
+	 System.out.print("ssss");
+	 break;
+}
+
+从Java12开始简化为以下形式，不用break；
+String name = "apple";
+switch(name){
+	case "apple" -> System.out.print("selected apple");
+	case "pear"  -> System.out.println("Selected pear");
+	case "mango" -> {
+		System.out.println("Selected mango");
+		System.out.print("good choice");
+	}
+	default -> System.out.print("default");
+}
+
+switch新语法还可以做返回值
+String fruit = "apple";
+int opt = switch (fruit) {
+	case "apple" -> 1;
+	case "pear", "mango" -> 2;
+	default -> 0;
+}; // 千万要注意赋值语句以分号;结束
+System.out.println("opt = " + opt); // opt = 1
+
+switch 用yield返回值
+String fruit = "orange";
+int opt = switch (fruit) {
+	case "apple" -> 1;
+	case "pear", "mango" -> 2;
+	default -> {
+		int code = fruit.hashCode();
+		yield code; // switch语句返回值
+	}
+};
+System.out.println("opt = " + opt);
+
+for each 遍历
+1,数组
+2,能够遍历所有“可迭代”的数据类型，包括List、Map等。
+int[] arr = {23, 56,7,4,37,834,32,4,67,7};
+for (int i : arr){
+	System.out.println(i);
+}
+
+Arrays.toString()，可以快速打印一维数组内容：
+System.out.println(Arrays.toString(arr));
+
+二维数组：
+int[][] ns = {
+    { 1, 2, 3, 4 },
+    { 5, 6 },
+    { 7, 8, 9 }
+};
+
+打印二维数组
+for(int[] arr : ns){
+	for(int n : arr){
+		System.out.println(n);
+	}
+}
+或者，使用Java标准库的Arrays.deepToString().
+
+
+二维数组排序
+1.内置的函数：  Arrays.sort(arr);
+2.冒泡排序:
+for(int i=0;i<arr.length-1;i++){
+	for(int j=0;arr.length-1-i;j++){
+		if(arr[j] > arr[j+1]){
+			int tmp = arr[j];
+			arr[j] = arr[j+1];
+			arr[j+1] = tem;
+		}
+	}
+}
+3.注意：以上方法修改了数组本身。
+4.如果排序的是整型数组，会改变数组元素的内容; 如果排序的是字符串数组，数组的内容没有改变，只是改变了每个元素指向。
+
+
+类,对象,属性,方法注意点
+1.类的定义用class：
+修饰符 class className {
+    若干属性;
+    若干方法;
+}
+
+2.类里的this指代对象可省;
+3.方法的声明：
+修饰符 [static] 方法返回类型 方法名(方法参数列表) {
+    若干方法语句;
+    return 方法返回值;
+}
+注意，修饰符有public ,private;
+	  方法没返回值时，方法返回类型为void，reture可省; 
+      调用方法时，实参和形参参数列表要一一对应（类型）;
+	  方法可变参数，用[类型... args]，可变参数相当于数组类型（完全等价于String[]类型）：
+	  public void setNames(String... names) {
+        this.names = names;
+      }
+4.基本类型参数的传递，是调用方值的复制。双方各自的后续修改，互不影响。
+5.引用类型参数的传递，调用方的变量，和接收方的参数变量，指向的是同一个对象。双方任意一方对这个对象的修改，都会影响对方（因为指向同一个对象）。
+6.构造方法的名称就是类名，参数没有限制，和普通方法相比，构造方法没有返回值（也没有void），调用构造方法，必须用new操作符;
+7.构造方法可以有多个，在通过new调用的时候，编译器通过构造方法的参数数量、位置和类型自动区分;
+8.一个构造方法可以调用其他构造方法，这样做的目的是便于代码复用。调用其他构造方法,用this代替，如this(name,age);
+9.方法重载,是指多个方法的方法名相同，但各自的参数不同，但要注意的是方法重载，其返回值类型应该要相同，如String的indexOf()；
+10. 实例化某个对象(Person)时，要声明其为Person类型，如 Person p = new Person();
+
+继承
+1.用关键字extends;
+2.子类自动获得了父类的所有字段，严禁定义与父类重名的字段！
+3.把父类称为超类（super class），父类（parent class），基类（base class），把子类（subclass）称为扩展类（extended class）。
+4.在Java中，没有明确写extends的类，编译器会自动加上extends Object。所以，任何类，除了Object，都会继承自某个类。
+5.Java只允许一个类有且仅有一个父类，但只有Object特殊，它没有父类，（Java只允许单继承，所有类最终的根类是Object）。
+6.子类无法访问父类的private字段或者private方法。
+7.protected修饰的字段和方法的访问权限控制在继承树内部，一个protected字段和方法可以被其子类，以及子类的子类所访问。
+8.super关键字表示父类（超类），子类引用父类的字段时，可以用 super.fieldName ，实际上，在子类中使用 super.name，或者this.name，或者name，效果都是一样的，编译器会自动定位到父类的name字段。
+9.在Java中，任何class的构造方法，第一行语句必须是调用父类的构造方法super(),若没有，编译器会自动帮我们加上。但如果父类构造方法是需要传参的，那么只能手动调用super(参数)。
+10.可以安全地向上转型为更抽象的类型；也可以强制向下转型，最好借助instanceof判断；
+11.区分继承和组合：继承是is关系，组合是has关系 ，如Student 和 Book。
+	class Student extends Person {
+		protected Book book;
+		protected int score;
+	}
+12.覆写（Override），子类定义了一个与父类方法签名完全相同的方法，加上@Override可以让编译器帮助检查是否进行了正确的覆写，@Override不是必需的。
+13.区别Override和Overload，如果方法签名不同，就是Overload（重载），Overload方法是一个新方法；如果方法签名相同，并且返回值也相同，就是Override。
+14.Java的实例方法调用，是基于运行时的实际类型的动态调用，而非变量的声明类型，称之为多态（Polymorphic），或者多态是指针对某个类型的方法调用，其真正执行的方法取决于运行时期实际类型的方法。
+15.Object定义了几个重要的方法：
+	toString()：把instance输出为String；
+	equals()：判断两个instance是否逻辑相等；
+	hashCode()：计算一个instance的哈希值。
+16.在子类的覆写方法中，如果要调用父类的被覆写的方法，可以通过super来调用，super.func()。
+17.关于final关键字：
+	用final修饰的方法不能被子类覆写(Override).
+	用final修饰的类不能被其他类继承。
+	用final修饰的字段在初始化后不能被修改，常常在构造方法中先初始化final字段。
+
+抽象
+1.使用abstract修饰的方法是抽象方法（只有定义，没有实现），定义了抽象方法的class必须被定义为抽象类（abstract class）。
+2.使用abstract修饰的类就是抽象类，无法实例化一个抽象类，并且只能extends一个class。
+	abstract class Person {
+		public abstract void run();
+	}
+3.抽象类的抽象方法定义了子类必须实现的接口规范，如果不实现抽象方法，则该子类仍是一个抽象类，当然抽象类也可以定义非抽象方法。
+4.面向抽象编程，尽量引用高层类型，避免引用具体实际的子类的类型，本质就是：
+	上层代码只定义规范（例如：abstract class Person）；
+	不需要子类就可以实现业务逻辑（正常编译）；
+	具体的业务逻辑由不同的子类实现，调用者并不关心。
+
+接口
+1.没有字段，只有抽象方法的抽象类，称为接口（interface），即接口是比抽象类更抽象的类。
+	interface Person {
+		void run();
+		String getName();
+	}
+2.接口定义的所有方法默认都是 public abstract 的（定义时可省略这两个关键字）。
+3.一个类可以实现多个interface。
+4.一个interface可以继承自另一个interface。interface继承自interface使用extends，它相当于扩展了接口的方法。
+5.在接口中，可以定义default方法：
+	interface Person {
+		String getName();
+		
+		//default方法，子类可以不必覆写default方法
+		default void run() {
+			System.out.println(getName() + " run");
+		}
+	}
+6.default方法的目的是，当我们需要给接口新增一个方法时，会涉及到修改全部子类。如果新增的是default方法，那么子类就不必全部修改。如果新增的是default方法，那么子类就不必全部修改，只需要在需要覆写的地方去覆写新增方法。
+7.default方法和抽象类的普通方法是有所不同的。因为interface没有字段，default方法无法访问字段，而抽象类的普通方法可以访问实例字段。
+
+注意：
+1.abstract class只能extends一个class，而接口(interface)可以implements多个interface.
+2.abstract class可以定义实例字段,抽象方法和非抽象方法，而接口(interface)不能定义实例字段，但可以定义抽象方法和default方法。 
+
+继承关系
+合理设计interface和abstract class的继承关系，可以充分复用代码。一般来说，公共逻辑适合放在abstract class中，具体逻辑放到各个子类，而接口层次代表抽象程度。
+Java的集合类定义的一组接口、抽象类以及具体子类的继承关系：
+┌───────────────┐
+│   Iterable    │
+└───────────────┘
+        ▲                ┌───────────────────┐
+        │                │      Object       │
+┌───────────────┐        └───────────────────┘
+│  Collection   │                  ▲
+└───────────────┘                  │
+        ▲     ▲          ┌───────────────────┐
+        │     └──────────│AbstractCollection │
+┌───────────────┐        └───────────────────┘
+│     List      │                  ▲
+└───────────────┘                  │
+              ▲          ┌───────────────────┐
+              └──────────│   AbstractList    │
+                         └───────────────────┘
+                                ▲     ▲
+                                │     │
+                                │     │
+                     ┌────────────┐ ┌────────────┐
+                     │ ArrayList  │ │ LinkedList │
+                     └────────────┘ └────────────┘
+在使用的时候，实例化的对象永远只能是某个具体的子类，但总是通过接口去引用它，因为接口比抽象类更抽象：
+List list = new ArrayList(); // 用List接口引用具体子类的实例
+Collection coll = list;      // 向上转型为Collection接口
+Iterable it = coll;          // 向上转型为Iterable接口
+
+静态字段和静态方法
+1.静态字段属于所有实例“共享”的字段，实际上是属于class的字段；
+2.调用静态方法不需要实例，无法访问this，但可以访问静态字段和其他静态方法；
+3.静态方法常用于工具类和辅助方法，如：
+	Arrays.sort()
+	Math.random()
+4.接口的静态字段，interface可以有静态字段，并且静态字段必须为final类型，但只能是public static final类型，并且可省。
+	public interface Person {
+	    // 编译器会自动加上public statc final
+		 int MALE = 1;
+		 int FEMALE = 2;
+	}
+
+package解决类名冲突
+1.package(包)是一种名字空间，一个类总是属于某个包，类名（比如Person）只是一个简写，真正的完整类名是包名.类名。
+2.包没有父子关系，如java.util和java.util.zip是不同的包，两者没有任何继承关系。
+3.在定义class的时候，需要在第一行声明这个class属于哪个包：
+	package mr.jun; // 申明包名mr.jun
+	public class Arrays {
+	  ...
+	}
+4.所有Java文件对应的目录层次要和包的层次一致。
+
+package包作用域:
+1.不用public、protected、private修饰的字段和方法就是包作用域。
+2.同一个包的类，可以访问该包作用域下所有类文件的字段和方法（不用public、protected、private修饰）。
+3.引用其他package包
+  第一种，直接写出完整类名： mr.jun.Arrays arrays = new mr.jun.Arrays();
+  第二种，用import语句，导入小军的Arrays ：
+	import mr.jun.Arrays; //导入完整类名
+	import mr.jun.*;	  //导入mr.jun包的所有class(不含子包的class) -- 不推荐
+  第三种，import static 语法，导入一个类的静态字段和静态方法：  
+	import static java.lang.System.*; //导入System类的所有静态字段和静态方法 -- 很少使用
+4.程序在编译解析类名时的查找路径：完整类名-> 当前package -> 查找import的包 -> 查找java.lang包 -> 报错
+5.程序在编译class时，编译器会自动import两个动作：当前package 和 java.lang.*
+	java.lang包的类有：String，System，Runtime ...
+    JDK常用类：java.util.List，java.text.Format，java.math.BigInteger ...
+6.JDK的其它常用类定义在java.util.*，java.math.*，java.text.*，……；
+7.包名推荐使用倒置的域名，例如org.apache
+8.JDK的核心类使用java.lang包，编译器会自动导入
+
+作用域修饰符
+1.定义为public的class、interface可以被其他任何类(同包或其他包里的类)访问：
+2.定义为public的field、method可以被其他类访问，前提是先有访问class的权限：
+3.定义为private的field、method无法被其他类访问，访问权限被限定在该class的内部；
+4.由于Java支持嵌套类(nested class)，即一个类内部还定义了嵌套类，嵌套类拥有访问外层类private的权限：
+	public class Main {
+	    //执行入口
+		public static void main(String[] args) {
+			Inner i = new Inner();
+			i.hi();
+		}
+
+		// private方法:
+		private static void hello() {
+			System.out.println("private hello!");
+		}
+
+		// 静态内部类:
+		static class Inner {
+			public void hi() {
+				Main.hello();
+			}
+		}
+	}
+5.定义为protected的字段和方法可以被子类访问，以及子类的子类：
+6.包作用域（package权限）是指一个类允许访问同一个包(package)里没有public、private修饰的class，以及没有public、protected、private修饰的字段和方法 ==>只要在同一个包，就可以访问package权限的class、field和method。
+7.局部变量，在方法内部定义的变量称为局部变量，局部变量作用域从变量声明处开始到对应的块结束。方法参数也是局部变量。
+8.final修饰符：修饰class阻止被继承，修饰method阻止被子类覆写，修饰field阻止被重新赋值，修饰局部变量阻止被重新赋值。
+9.Java内建的访问权限包括public、protected、private和package权限；
+注意：
+1.所谓package权限（包作用域），就是没有用public、private修饰的class，和没有public、protected、private修饰的字段和方法。
+2.一个.java文件只能包含一个public类，但可以包含多个非public类。如果有public类，文件名必须和public类的名字相同。
+3.如果不确定是否需要public，就不声明为public，即尽可能少地暴露对外的字段和方法。
+4.把方法定义为package权限有助于测试，因为测试类和被测试类只要位于同一个package，测试代码就可以访问被测试类的package权限方法。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
