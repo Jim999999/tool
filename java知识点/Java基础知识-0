@@ -475,25 +475,60 @@ package包作用域:
 3.如果不确定是否需要public，就不声明为public，即尽可能少地暴露对外的字段和方法。
 4.把方法定义为package权限有助于测试，因为测试类和被测试类只要位于同一个package，测试代码就可以访问被测试类的package权限方法。
 
+几个概念
+1.classpath是JVM用到的一个环境变量，它用来指示JVM如何搜索class。
+在Windows系统上，用;分隔，带空格的目录用""括起来，可能长这样：C:\work\project1\bin;C:\shared;"D:\My Documents\project1\bin"
+在Linux系统上，用:分隔，可能长这样：/usr/shared:/usr/local/bin:/home/liaoxuefeng/bin
+假设classpath是.;C:\work\project1\bin;C:\shared
+	<当前目录>\abc\xyz\Hello.class
+	C:\work\project1\bin\abc\xyz\Hello.class
+	C:\shared\abc\xyz\Hello.class
+如果都没有找到，就报错。
+classpath的设定方法有两种：
+	在系统环境变量中设置classpath环境变量，不推荐；
+	在启动JVM时设置classpath变量，推荐。
+实际上就是给java命令传入-classpath或-cp参数：
+java -classpath .;C:\work\project1\bin;C:\shared abc.xyz.Hello
+或者使用-cp的简写：
+java -cp .;C:\work\project1\bin;C:\shared abc.xyz.Hello
+注意:
+	1.没有设置系统环境变量，也没有传入-cp参数，那么JVM默认的classpath为.(即当前目录)：
+	2.不要把任何Java核心库(rt.jar)添加到classpath中！JVM根本不依赖classpath加载核心库！
+	3.更好的做法是，不要设置classpath！默认的当前目录.对于绝大多数情况都够用了。
+	
+2.jar包,是为了便于管理，将散落在各个目录下的所有文件（包括.class文件和其他文件）都打成一个jar文件。
+jar包实际上就是一个zip格式的压缩文件，而jar包相当于目录。若执行一个jar包的class，就可以把jar包放到classpath中：
+java -cp ./hello.jar abc.xyz.Hello   //JVM会自动在hello.jar文件里去搜索Hello类
+jar包还可以包含一个特殊的/META-INF/MANIFEST.MF文件，MANIFEST.MF是纯文本，可以指定Main-Class和其它信息。JVM会自动读取这个MANIFEST.MF文件，如果存在Main-Class，我们就不必在命令行指定启动的类名，而是用更方便的命令：java -jar hello.jar
+jar包还可以包含其它jar包，这个时候，就需要在MANIFEST.MF文件里配置classpath了。
+创建jar包工具Maven。
 
 
+模块（Module）
+1.从Java 9开始，JDK引入了模块（Module）-- jar文件就是class文件的容器,但并不关心class之间的依赖。
+2.JVM自带的Java标准库rt.jar，一共有60多M。
+3.主要是为了解决“依赖”这个问题。
+4.自带“依赖关系”的class容器(jar)就是模块。
+5.从Java 9开始，原有的Java标准库已由一个单一巨大的rt.jar分拆成了几十个模块，这些模块以.jmod扩展名标识，存在$JAVA_HOME/jmods目录下;
+6.把一堆class封装为jar仅仅是一个打包的过程，而把一堆class封装为模块则不但需要打包，还需要写入依赖关系，并且还可以包含二进制代码（通常是JNI扩展）。此外，模块支持多版本，即在同一个模块中可以为不同的JVM提供不同的版本。
+7.模块的重要作用就是声明依赖关系.
+8.在模块的目录下module-info.java 是模块声明requires 和 导出exports的标识。
+9.创建模块
+   1)编译成.class文件：javac -d bin src/module-info.java src/com/itranswarp/sample/*.java
+   2)bin/*.class文件打包成jar : jar --create --file hello.jar --main-class com.itranswarp.sample.Main -C bin .    ==>在当前目录下得到了hello.jar,可以直接使用命令java -jar hello.jar来运行
+   3)使用JDK自带的jmod命令把一个jar包转换成模块：jmod create --class-path hello.jar hello.jmod
+10.要运行一个jar，我们使用java -jar xxx.jar命令，而运行一个模块，我们需要指定模块名：
+  java --module-path hello.jmod --module hello.world  ---报错--> java --module-path hello.jar --module hello.world 
+11.运行模块时，需打包成自定义的JRE：
+  1)JRE是标准库(有100多M)已被分拆成了多个模块，只需要带上程序用到的模块即可；
+  2)JDK提供了jlink命令来完成打包: jlink --module-path hello.jmod --add-modules java.base,java.xml,hello.world --output jre/	
+  3)--module-path参数指定了我们自己的模块hello.jmod，然后，在--add-modules参数中指定了我们用到的3个模块java.base、java.xml和hello.world，用,分隔。最后，在--output参数指定输出目录。
+  4)在jre目录，有hello.jmod模块的JRE，运行JRE：jre/bin/java --module hello.world
+12.导出模块里的类，才能被外部访问：
+	module hello.world {
+		exports com.itranswarp.sample;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		requires java.base;
+		requires java.xml;
+	}
 

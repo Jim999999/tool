@@ -1,0 +1,255 @@
+java核心类
+
+字符串和编码
+1.Java字符串String是不可变对象；字符串操作不改变原字符串内容，而是返回新字符串；Java使用Unicode编码表示String和char；
+2.比较字符串的内容是否相同，必须使用 equals()方法而不是用== ，要忽略大小写比较，使用 equalsIgnoreCase()方法。
+3.字符串操作：
+    //包含 , 搜索子串
+	"Hello".contains("ll"); // true 
+	"Hello".indexOf("l");   // 2
+	"Hello".lastIndexOf("l"); // 3
+	"Hello".startsWith("He"); // true
+	"Hello".endsWith("lo"); // true
+    //提取子串的例子
+	"Hello".substring(2); // "llo"
+	"Hello".substring(2, 4); "ll"
+	
+	//使用trim()方法可以移除字符串首尾空白字符。空白字符包括空格，\t，\r，\n：
+	"  \tHello\r\n ".trim(); // "Hello"
+	
+	//strip()方法也可以移除字符串首尾空白字符,含中文的空格字符\u3000：
+	"\u3000Hello\u3000".strip(); // "Hello"
+	" Hello ".stripLeading(); // "Hello "  去除开头的空白
+	" Hello ".stripTrailing(); // " Hello" 去除尾部的空白
+
+	//isEmpty()和isBlank()判断字符串是否为空和空白字符串：
+	"".isEmpty(); // true，因为字符串长度为0
+	"  ".isEmpty(); // false，因为字符串长度不为0
+	"  \n".isBlank(); // true，因为只包含空白字符
+	" Hello ".isBlank(); // false，因为包含非空白字符
+
+	//替换子串
+    "hewwo".replace('l', 'w'); // "hewwo"，所有字符'l'被替换为'w'
+	"A,,B;C ,D".replaceAll("[\\,\\;\\s]+", ","); // "A,B,C,D" ，正则替换
+	
+	//分割字符串
+	String[] ss = "A,B,C,D".split("\\,"); // {"A", "B", "C", "D"}
+
+	//拼接字符串,使用String类的静态方法join()
+	String[] arr = {"A", "B", "C"};
+	String s = String.join("***", arr); // "A***B***C"
+
+	//格式化字符串,用formatted()方法 或 String类的format()静态方法
+	String s = "Hi %s, your score is %d!";
+	s.formatted("Alice", 80);
+	String.format("Hi %s, your score is %.2f!", "Bob", 59.5);
+
+	//类型转换,把任意基本类型或引用类型转换为字符串，可以使用静态方法valueOf()
+	String.valueOf(123); // "123"
+	String.valueOf(45.67); // "45.67"
+	String.valueOf(true); // "true"
+	String.valueOf(new Object()); // 类似java.lang.Object@636be97c
+
+	//String和char[]类型可以互相转换
+	char[] cs = "Hello".toCharArray(); // String -> char[] 后就可以下标的方式访问字母
+	System.out.print(cs[0]); //H  用索引下标访问字母
+	String s = new String(cs); // char[] -> String 组合成String类型，就可用String的相关函数属性，如length()求长度
+
+	//把字符串转换为int类型：
+	int n1 = Integer.parseInt("123"); // 123
+	int n2 = Integer.parseInt("ff", 16); // 按十六进制转换，255
+	注意，Integer有个getInteger(String)方法，它不是将字符串转换为int，而是把该字符串对应的系统变量转换为Integer	，如：
+	Integer.getInteger("java.version"); // 版本号，11
+	
+	//把字符串转换为boolean类型：
+	boolean b1 = Boolean.parseBoolean("true"); // true
+	boolean b2 = Boolean.parseBoolean("FALSE"); // false	
+		
+    //从引用类型的数组中复制一个新对象数组
+	int[] old_arr = new int[]{1,2,8,7,6};
+	
+	int[] new_arr = new int[array1.length]; //创建了一个新的数组后用 引用浅拷贝arraycopy
+	System.arraycopy(old_arr, 0, new_arr, 0, old_arr.length); //arraycopy(Object src, int srcPos,Object dest,int destPos,int length) 
+	Arrays.copyOf（浅拷贝）
+	old_arr = old_arr.clone(); //直接克隆
+
+数组操作
+String[] arr = {"hah","ert","qwe"};
+int long = arr.length;
+String s = Arrays.toString(arr); //返回字符串类型{"hah","ert","qwe"}
+
+	
+字符编码
+1.ASCII编码：1个字母占用1个字节(byte)
+2.GB2312标准:1个汉字占用2个个字节(byte)	
+3.Unicode编码：统一编码，需两个或者更多字节，并且固定长度的Unicode编码
+4.UTF-8编码：1～4字节的变长编码，1个字母占用1个字节，1个中文占用3个字节	
+注意，Java的String和char在内存中总是以Unicode编码表示。	
+	
+
+StringBuilder类
+1.字符串的拼接用“+”号，但在循环拼接时会创建新的字符串对象，扔掉旧的字符串对象，这样不但浪费内存，还会影响GC效率，此时拼接用StringBuilder可以节省开支。
+2.StringBuilder 是一个可变对象，可以预分配缓冲区，这样，往StringBuilder中新增字符时，不会创建新的临时对象：
+	StringBuilder sb = new StringBuilder(1024);
+	for (int i = 0; i < 1000; i++) {
+		sb.append(',');
+		sb.append(i);
+	}
+	String s = sb.toString();
+	//链式操作
+	var sb = new StringBuilder(1024);
+			sb.append("Mr ")
+			  .append("Bob")
+			  .append("!")
+			  .insert(0, "Hello, ")
+			  .delete(offset,length);//去除某个字符
+		System.out.println(sb.toString());		
+			
+StringJoiner类		
+1.用分隔符拼接数组	
+	String[] names = {"hh","er","uu"};
+	var sj = new StringJoiner(", ");
+	for(String n : names){
+	  sj.add(n);
+	}
+	System.out.println(sj.toString()); //直接返回 hh,er,uu
+//var sj = new StringJoiner(", ","开头子句","结尾子句");	// 开头子句 hh,er,uu 结尾子句
+2.String还提供了一个静态方法join()，这个方法在内部使用了StringJoiner来拼接字符串，在不需要指定“开头”和“结尾”的时候，用String.join()更方便：	
+var s = String.join(", ", names); //直接返回 hh,er,uu
+	
+包装类型
+1.回顾Java的数据类型分两种：	
+	基本类型：byte，short，int，long，char，float，double，boolean
+	引用类型：所有class和interface类型
+  注意，引用类型可以赋值为null，表示空，但基本类型不能赋值为null：
+2.包装类：把int基本类型变成一个引用类型，可以为基本类型int定义一个Integer类，它只包含一个实例字段int，这样，Integer类就可以视为int的包装类（Wrapper Class）：		
+3.因为包装类型非常有用，Java核心库为每种基本类型都提供了对应的包装类型：	
+	基本类型	对应的引用类型
+	boolean		java.lang.Boolean
+	byte		java.lang.Byte
+	short		java.lang.Short
+	int			java.lang.Integer
+	long		java.lang.Long
+	float		java.lang.Float
+	double		java.lang.Double
+	char		java.lang.Character	
+
+	// 通过静态方法valueOf(int)创建Integer实例:
+    Integer n2 = Integer.valueOf(i);
+    // 通过静态方法valueOf(String)创建Integer实例:
+    Integer n3 = Integer.valueOf("100");	
+	System.out.println(n3.intValue());	// 100
+	
+4.直接把int变为Integer的赋值写法，称为自动装箱（Auto Boxing），反过来，把Integer变为int的赋值写法，称为自动拆箱（Auto Unboxing）。
+	//Auto Boxing ,Java编译器自动在int和Integer之间转型：
+	Integer n = 100; // 编译器自动使用Integer.valueOf(int)
+	int x = n;       // 编译器自动使用Integer.intValue()	
+	注意：自动装箱和自动拆箱只发生在编译阶段，目的是为了少写代码。
+5.不变类,所有的包装类型都是不变类。比如，一旦创建了Integer对象，该对象就是不变的。
+6.对两个Integer实例进行比较要特别注意：绝对不能用==比较，因为Integer是引用类型，必须使用equals()比较 
+7.进制转换，最常用的静态方法parseInt()
+	int x2 = Integer.parseInt("100", 16); // 256,因为按16进制解析
+	System.out.println(Integer.toString(100)); // "100",表示为10进制
+	System.out.println(Integer.toString(100, 36)); // "2s",表示为36进制
+	System.out.println(Integer.toHexString(100)); // "64",表示为16进制
+	System.out.println(Integer.toOctalString(100)); // "144",表示为8进制
+	System.out.println(Integer.toBinaryString(100)); // "1100100",表示为2进制
+
+8.所有的整数和浮点数的包装类型都继承自Number，因此，可以非常方便地直接通过包装类型获取各种基本类型：
+	// 向上转型为Number:
+	Number num = new Integer(999);
+	// 获取byte, int, long, float, double:
+	byte b = num.byteValue();
+	int n = num.intValue();
+	long ln = num.longValue();
+	float f = num.floatValue();
+	double d = num.doubleValue();
+
+JavaBean		
+1.JavaBean是一种符合命名规范的class，它通过getter和setter来定义属性；
+2.利用IDE快速生成getter和setter；
+在IDE编辑器中，先输入以下代码：
+public class Person {
+    private String name;
+    private int age;
+}	
+然后，点击右键，在弹出的菜单中选择“Source”，“Generate Getters and Setters”，在弹出的对话框中选中需要生成getter和setter方法的字段，点击确定即可由IDE自动完成所有方法代码。
+3.使用Introspector.getBeanInfo()可以获取属性列表。
+	
+enum枚举类型
+0.enum定义的类型就是class。	
+1.Java使用enum定义枚举类型，它被编译器编译为final class Xxx extends Enum { … }；	
+2.通过name()获取常量定义的字符串，注意不要使用toString()；
+3.通过ordinal()返回常量定义的顺序（无实质意义）；
+4.可以为enum编写构造方法、字段和方法
+5.enum的构造方法要声明为private，字段强烈建议声明为final；
+6.enum适合用在switch语句中。
+	public class Main {
+		public static void main(String[] args) {
+			Weekday day = Weekday.SUN; //day就是一个实例
+			switch(day) {
+			case MON:
+			case TUE:
+			case WED:
+			case THU:
+			case FRI:
+				System.out.println("Today is " + day + ". Work at office!");
+				break;
+			case SAT:
+			case SUN:
+				System.out.println("Today is " + day + ". Work at home!");
+				break;
+			default:
+				throw new RuntimeException("cannot process " + day);
+			}
+		}
+	}
+
+    //enum 本身就是个类
+	enum Weekday {
+	    //每个实例
+		MON(1,"周一"), TUE(2,"周二"), WED(3,"周三"), THU(4,"周四"), FRI(5,"周五"), SAT(6,"周六"), SUN(7,"周日");
+
+		public  final int val;
+		private final String name;
+		private Weekday(int val ,String name){
+		  this.val = val;
+		  this.name = name;
+	   }
+	  
+	   @Override
+	   public String toString(){
+		return this.name;
+	  }
+
+	}
+7.enum的比较
+使用enum定义的枚举类是一种引用类型。前面我们讲到，引用类型比较，要使用equals()方法，如果使用==比较，它比较的是两个引用类型的变量是否是同一个对象。因此，引用类型比较，要始终使用equals()方法，但enum类型可以例外（因为enum类型的每个常量在JVM中只有一个唯一实例，所以可以直接用==比较）。
+8.enum类型属性	
+	name()，ordinal()
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
