@@ -1,0 +1,173 @@
+Java的异常
+1.Java使用异常来表示错误，并通过try ... catch捕获异常；
+2.Java的异常是class，并且从Throwable继承；
+					 ┌───────────┐
+                     │  Object   │
+                     └───────────┘
+                           ▲
+                           │
+                     ┌───────────┐
+                     │ Throwable │
+                     └───────────┘
+                           ▲
+                 ┌─────────┴─────────┐
+                 │                   │
+           ┌───────────┐       ┌───────────┐
+           │   Error   │       │ Exception │
+           └───────────┘       └───────────┘
+                 ▲                   ▲
+         ┌───────┘              ┌────┴──────────┐
+         │                      │               │
+┌─────────────────┐    ┌─────────────────┐┌───────────┐
+│OutOfMemoryError │... │RuntimeException ││IOException│...
+└─────────────────┘    └─────────────────┘└───────────┘
+                                ▲
+                    ┌───────────┴─────────────┐
+                    │                         │
+         ┌─────────────────────┐ ┌─────────────────────────┐
+         │NullPointerException │ │IllegalArgumentException │...
+         └─────────────────────┘ └─────────────────────────┘
+  1).Throwable有两个体系：Error和Exception,Error表示严重的错误，程序对此一般无能为力,比如：
+	  OutOfMemoryError：内存耗尽
+	  NoClassDefFoundError：无法加载某个Class
+	  StackOverflowError：栈溢出
+	而Exception则是运行时的错误，它可以被捕获并处理。  
+3.Error是无需捕获的严重错误，Exception是应该捕获的可处理的错误；
+4.RuntimeException无需强制捕获，非RuntimeException（Checked Exception）需强制捕获，或者用throws声明；
+  1).所有未捕获的异常，最终也必须在main()方法中捕获, main()方法是最后捕获Exception的机会
+  2).可以直接把main()方法定义为throws Exception
+  3).main()方法定义为throws Exception，表示处理所有的异常
+	// try...catch
+	import java.io.UnsupportedEncodingException;
+	import java.util.Arrays;
+	public class Main {
+		// main()方法是最后捕获Exception的机会
+		public static void main(String[] args) throws Exception {
+			byte[] bs = toGBK("中文");
+			System.out.println(Arrays.toString(bs));
+		}
+
+		static byte[] toGBK(String s) throws UnsupportedEncodingException {
+			// 用指定编码转换String为byte[]:
+			return s.getBytes("GBK");
+		}
+	}
+5.所有异常都可以调用 printStackTrace()方法打印异常栈
+	 try {
+        return s.getBytes("GBK");
+    } catch (UnsupportedEncodingException e) {
+        // 先记下异常:
+        e.printStackTrace();
+    }finally{
+		//不管代码执行对或错，都会执行这里的语句块
+	}
+ 注意几个特点：
+     多个catch语句的匹配顺序非常重要，子类必须放在前面；
+	 一个catch语句也可以匹配多个非继承关系的异常，如：catch (IOException | NumberFormatException e);
+	 捕获异常并再次抛出新的异常时，应该持有原始异常信息，如throw new IllegalArgumentException(e);//抛出IllegalArgumentException异常时带上原有的异常信息e；
+	 finally语句不是必须的，可写可不写；
+	 finally总是最后执行。
+	 在catch中抛出异常，不会影响finally的执行。JVM会先执行finally，然后抛出异常。
+6.抛出异常
+  public static void main(String[] args) {
+        try {
+            Integer.parseInt("abc");
+        } catch (Exception e) {
+            System.out.println("catched");
+            throw new RuntimeException(e);//注意一定要把原始的 Exception e给抛出
+        } finally {
+            System.out.println("finally");
+        }
+    }
+7.Java标准库定义的常用异常包括：
+	Exception
+	│
+	├─ RuntimeException
+	│  │
+	│  ├─ NullPointerException
+	│  │
+	│  ├─ IndexOutOfBoundsException
+	│  │
+	│  ├─ SecurityException
+	│  │
+	│  └─ IllegalArgumentException
+	│     │
+	│     └─ NumberFormatException
+	│
+	├─ IOException
+	│  │
+	│  ├─ UnsupportedCharsetException
+	│  │
+	│  ├─ FileNotFoundException
+	│  │
+	│  └─ SocketException
+	│
+	├─ ParseException
+	│
+	├─ GeneralSecurityException
+	│
+	├─ SQLException
+	│
+	└─ TimeoutException
+
+8.使用断言
+	public static void main(String[] args) {
+		double x = Math.abs(-123.45);
+		assert x >= 0; //使用断言，当为false，会抛出AssertionError。
+		System.out.println(x);
+	}
+    使用assert语句时，还可以添加一个可选的断言消息：assert x >= 0 : "x must >= 0";断言失败的时候，AssertionError会带上消息x must >= 0
+	注意，JVM默认关闭断言指令，即遇到assert语句就自动忽略了，不执行。
+		  要执行assert语句，必须给Java虚拟机传递-enableassertions（可简写为-ea）参数启用断言。所以，上述程序必须在命令行下运行才有效果：
+		  java -ea file.java
+9.日志
+  1).使用JDK Logging
+	Java标准库内置了日志包java.util.logging
+    JDK的Logging定义了7个日志级别，从严重到普通：SEVERE，WARNING，INFO(默认)，CONFIG，FINE，FINER，FINEST
+	配置不太方便,需要在JVM启动时传递参数-Djava.util.logging.config.file=<config-file-name>。导致内置的Logging使用并不是非常广泛。
+  2).第三方日志库Commons Logging - 由Apache创建的日志模块 - 日志接口
+	可以挂接不同的日志系统,自动搜索并使用Log4j（Log4j是另一个流行的日志系统）,若没有再使用JDK Logging。
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	public class Main {
+		public static void main(String[] args) {
+			Log log = LogFactory.getLog(Main.class);
+			log.info("start...");
+			log.warn("end.");
+		}
+	}
+  3).运行
+    cmd> javac -cp commons-logging-1.2.jar Main.java
+	cmd> java -cp ".;commons-logging-1.2.jar" Main
+		9月 04, 2020 10:57:51 上午 Main main
+		信息: start...
+		9月 04, 2020 10:57:51 上午 Main main
+		警告: end.
+  4).Commons Logging定义了6个日志级别：FATAL,ERROR,WARNING,INFO(默认),DEBUG,TRACE
+  5).在静态方法中引用log
+	public class Main {
+		static final Log log = LogFactory.getLog(Main.class);
+
+		static void foo() {
+			log.info("foo");
+		}
+	}
+  6).在实例方法中引用Log，通常定义一个实例变量：
+	public class Person {
+		protected final Log log = LogFactory.getLog(getClass());  //注意到实例变量log的获取方式 getClass(),这样获取的好处是子类可以直接使用该log实例
+
+		void foo() {
+			log.info("foo");
+		}
+	}
+  7).Commons Logging的日志方法，例如info()，除了标准的info(String)外，还提供了一个非常有用的重载方法：info(String, Throwable)，这使得记录异常更加简单：
+	try {
+		...
+	} catch (Exception e) {
+		log.error("got exception!", e); // 把错误信息 e也给记录下来了
+	}
+  8).SLF4J和Logback可以取代Commons Logging和Log4j	
+
+
+
+

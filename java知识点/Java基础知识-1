@@ -228,28 +228,109 @@ enum枚举类型
 8.enum类型属性	
 	name()，ordinal()
 	
+不变类特点：	
+1.定义class时使用final，无法派生子类；
+2.每个字段使用final，保证创建实例后无法修改任何字段。
+3.如String、Integer等类都是不变类。
 	
+BigInteger类
+1.java.math.BigInteger用来表示任意大小的整数。BigInteger内部用一个int[]数组来模拟一个非常大的整数；
+2.和long型整数运算比，BigInteger不会有范围限制，但缺点是速度比较慢；
+3.BigInteger和Integer、Long一样，也是不可变类，并且也继承自Number类；
+	转换为byte：byteValue()
+	转换为short：shortValue()
+	转换为int：intValue()
+	转换为long：longValue()
+	转换为float：floatValue()
+	转换为double：doubleValue()
+4.使用longValueExact()方法时，如果超出了long型的范围，会抛出ArithmeticException；
+5.如果BigInteger的值超过了float的最大范围，返回 Infinity 。	
+6.BigInteger做运算的时候，只能使用实例方法	
+	BigInteger i1 = new BigInteger("1234567890");
+	BigInteger i2 = new BigInteger("12345678901234567890");
+	BigInteger sum = i1.add(i2); // 12345678902469135780  ，multiply乘
+		
+BigDecimal类	
+1.和BigInteger类似，BigDecimal可以表示一个任意大小且精度完全准确的浮点数。	
+2.BigDecimal用scale()表示小数位数	
+	BigDecimal d2 = new BigDecimal("123.4500");
+	System.out.println(d2.scale()); // 4
+	BigDecimal d3 = new BigDecimal("1234500");
+	System.out.println(d3.scale()); // 0
+3.通过BigDecimal的stripTrailingZeros()方法，可以将一个BigDecimal格式化为一个相等的，但去掉了末尾0的BigDecimal
+	BigDecimal d1 = new BigDecimal("123.4500");
+	BigDecimal d2 = d1.stripTrailingZeros();
+	System.out.println(d1.scale()); // 4
+	System.out.println(d2.scale()); // 2,因为去掉了00	
+		
+	BigDecimal d3 = new BigDecimal("1234500");
+	BigDecimal d4 = d3.stripTrailingZeros();
+	System.out.println(d3.scale()); // 0
+	System.out.println(d4.scale()); // -2 ，scale()返回负数，表示这个数是个整数，并且末尾有2个0。
+4.对一个BigDecimal设置它的scale（四舍五入或者直接截断）	
+	import java.math.BigDecimal;
+	import java.math.RoundingMode;	
+	BigDecimal d1 = new BigDecimal("123.456789");
+    BigDecimal d2 = d1.setScale(4, RoundingMode.HALF_UP); // 四舍五入，123.4568
+    BigDecimal d3 = d1.setScale(4, RoundingMode.DOWN); // 直接截断，123.4567
+5.对BigDecimal做加、减、乘时，精度不会丢失，但做除法时，存在无法除尽的情况，这时，就必须指定精度以及如何进行截断：
+	BigDecimal d1 = new BigDecimal("123.456");
+	BigDecimal d2 = new BigDecimal("23.456789");
+	BigDecimal d3 = d1.divide(d2, 10, RoundingMode.HALF_UP); // 保留10位小数并四舍五入
+	BigDecimal d4 = d1.divide(d2); // 报错：ArithmeticException，因为除不尽
+6.对BigDecimal做除法的同时求余数：
+    BigDecimal n = new BigDecimal("12.345");
+	BigDecimal m = new BigDecimal("0.12");
+	BigDecimal[] dr = n.divideAndRemainder(m); //返回的数组包含两个 BigDecimal，分别是商(整数)和余数(不会大于除数)
+7.比较两个BigDecimal的值是否相等，必须使用compareTo()方法来比较，它根据两个值的大小分别返回负数、正数和0，分别表示小于、大于和等于。
+	System.out.println(d1.compareTo(d2)); // 0
+	注意
+	1).总是使用compareTo()比较两个BigDecimal的值，不要使用equals()！
+	2).若使用 equals() 方法比较，不但要求两个BigDecimal的值相等，还要求它们的scale()相等：
+		BigDecimal d1 = new BigDecimal("123.456");
+		BigDecimal d2 = new BigDecimal("123.45600");
+		System.out.println(d1.equals(d2)); // false,因为scale不同
+		System.out.println(d1.equals(d2.stripTrailingZeros())); // true,因为d2去除尾部0后scale变为2
 	
+常用工具类
+1.Math类
+	Math.random(); // 0.53907... 每次都不一样，范围0 <= x < 1
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	double x = Math.random(); // x的范围是[0,1)
+	double min = 10;
+	double max = 50;
+	double y = x * (max - min) + min; // y的范围是[10,50)
+	long n = (long) y; // n的范围是[10,50)的整数
 
+	Math.abs(-100); // 100求绝对值
+	Math.max(100, 99); // 100
+	Math.pow(2, 10);   // 2的10次方=1024
+	Math.sqrt(2); // 1.414..
+	Math.exp(2); // 7.389... 计算e的x次方：
+	Math.log(4); // 1.386... 计算以e为底的对数：
+	Math.log10(100); // 2    计算以10为底的对数：
+	Math.sin(3.14); // 0.00159...  三角函数：
+	Math.cos(3.14); // -0.9999...
+	Math.tan(3.14); // -0.0015...
+	Math.asin(1.0); // 1.57079...
+	Math.acos(1.0); // 0.0
+	double pi = Math.PI; // 3.14159...  数学常量：
+	double e = Math.E; // 2.7182818...
+	Math.sin(Math.PI / 6); // sin(π/6) = 0.5
 
+2.Random创建伪随机数
+  1).伪随机数是指只要给定一个初始的种子，产生的随机数序列是完全一样的。
+  2).要生成一个随机数，可以使用nextInt()、nextLong()、nextFloat()、nextDouble()：
+	Random r = new Random();
+	r.nextInt(); // 2071575453,每次都不一样
+	r.nextInt(10); // 5,生成一个[0,10)之间的int
+	r.nextLong(); // 8811649292570369305,每次都不一样
+	r.nextFloat(); // 0.54335...生成一个[0,1)之间的float
+	r.nextDouble(); // 0.3716...生成一个[0,1)之间的double
 
-
+3.SecureRandom创建真随机数
+    实际上真正的真随机数只能通过量子力学原理来获取，而我们想要的是一个不可预测的安全的随机数，SecureRandom就是用来创建安全的随机数的：
+	 SecureRandom sr = new SecureRandom();
+	 System.out.println(sr.nextInt(100));
 
 

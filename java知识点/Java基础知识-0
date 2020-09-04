@@ -1,3 +1,7 @@
+手动配置vscode
+setting->搜索 “code run ” termal
+快捷键：ctrl+alt+n 
+
 Java由SUN公司（已被Oracle收购）的詹姆斯·高斯林（高司令，人称Java之父）在上个世纪90年代初开发的，最初被命名为Oak。
 推荐的Java学习路线图：
 首先要学习Java SE，掌握Java语言本身、Java核心开发技术以及Java标准库的使用；
