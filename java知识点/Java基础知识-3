@@ -103,22 +103,58 @@ Class类
  4).通过Class对象的isAssignableFrom()方法可以判断一个向上转型是否可以实现。
  
 注解（Annotation）
-1.注解是放在Java源码的类、方法、字段、参数前的一种特殊“注释”：
+  定义：
+	1.注解是放在Java源码的类、方法、字段、参数前的一种特殊“注释”：
+	2.注解（Annotation）是Java语言用于工具处理的标注：
+	3.注解可以配置参数，没有指定配置的参数使用默认值；
+	4.如果参数名称是value，且只有一个参数，那么可以省略参数名称。
+	5.Java使用@interface定义注解：
+	6.可定义多个参数和默认值，核心参数使用value名称；
+	7.必须设置@Target来指定Annotation可以应用的范围；
+	8.应当设置@Retention(RetentionPolicy.RUNTIME)便于运行期读取该Annotation。
+  处理：
+	1.根据@Retention的配置：
+		1).SOURCE类型的注解在编译期就被丢掉了，主要由编译器使用；
+		2).CLASS类型的注解仅保存在class文件中，它们不会被加载进JVM，主要由底层工具库使用；
+		3).RUNTIME类型的注解会被加载进JVM，并且在运行期可以被程序读取，RUNTIME类型注解不但要使用，还经常需要编写。  
+	2.注解定义后也是一种class，所有的注解都继承自java.lang.annotation.Annotation，因此，读取注解，需要使用反射API。
+		2.2.Java提供的使用反射API读取Annotation的方法包括：
+		判断某个注解是否存在于Class、Field、Method或Constructor：
+		Class.isAnnotationPresent(Class)
+			// 判断@Report是否存在于Person类:
+			Person.class.isAnnotationPresent(Report.class);
+		Field.isAnnotationPresent(Class)
+		Method.isAnnotationPresent(Class)
+		Constructor.isAnnotationPresent(Class)
 
+		2.3.使用反射API读取Annotation：
+		Class.getAnnotation(Class)
+		Field.getAnnotation(Class)
+		Method.getAnnotation(Class)
+		Constructor.getAnnotation(Class)
+			// 获取Person定义的@Report注解:
+			Report report = Person.class.getAnnotation(Report.class);
+			int type = report.type();
+			String level = report.level();
+		2.4.使用反射API读取Annotation有两种方法。方法一是先判断Annotation是否存在，如果存在，就直接读取：
+			Class cls = Person.class;
+			if (cls.isAnnotationPresent(Report.class)) {
+				Report report = cls.getAnnotation(Report.class);
+				...
+			}
+		2.5.第二种方法是直接读取Annotation，如果Annotation不存在，将返回null：
+			Class cls = Person.class;
+			Report report = cls.getAnnotation(Report.class);
+			if (report != null) {
+			   ...
+			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+泛型（“代码模板”）
+1.泛型是定义一种模板，例如ArrayList<T>，在代码中为用到的类创建对应的ArrayList<类型>：
+	ArrayList<String> strList = new ArrayList<String>();
+2.向上转型，在Java标准库中的ArrayList<T>实现了List<T>接口，它可以向上转型为List<T>：
+	List<String> list = new ArrayList<String>();
+	要特别注意：不能把ArrayList<Integer>向上转型为ArrayList<Number>或List<Number>。
 
 
 
