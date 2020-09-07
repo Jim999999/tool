@@ -155,6 +155,174 @@ Class类
 2.向上转型，在Java标准库中的ArrayList<T>实现了List<T>接口，它可以向上转型为List<T>：
 	List<String> list = new ArrayList<String>();
 	要特别注意：不能把ArrayList<Integer>向上转型为ArrayList<Number>或List<Number>。
+3.注意泛型的继承关系：可以把ArrayList<Integer>向上转型为List<Integer>（T不能变！），但不能把ArrayList<Integer>向上转型为ArrayList<Number>（T不能变成父类）。
+4.如果不定义泛型类型时，泛型类型实际上就是Object：
+5.简写
+	// 可以省略后面的Number，编译器可以自动推断泛型类型：
+	List<Number> list = new ArrayList<>();
+    ArrayList<String> listString =  new ArrayList<>();
+6.除了ArrayList<T>使用了泛型，还可以在接口中使用泛型。例如，Arrays.sort(Object[])可以对任意数组进行排序，但待排序的元素必须实现Comparable<T>这个泛型接口：
+	public interface Comparable<T> {
+		/**
+		 * 返回负数: 当前实例比参数o小
+		 * 返回0: 当前实例与参数o相等
+		 * 返回正数: 当前实例比参数o大
+		 */
+		int compareTo(T o);
+	}
+7.编写泛型
+	编写泛型时，需要定义泛型类型<T>；
+	静态方法不能引用泛型类型<T>，必须定义其他类型（例如<K>）来实现静态泛型方法；
+	泛型可以同时定义多种类型，例如Map<K, V>。
+8.泛型的局限：
+  1).<T>不能是基本类型，例如int，因为实际类型是Object，Object类型无法持有基本类型：
+	Pair<int> p = new Pair<>(1, 2); // compile error!
+  2).无法取得带泛型的Class。换句话说，所有泛型实例，无论T的类型是什么，getClass()返回同一个Class实例，因为编译后它们全部都是Pair<Object>。
+  3).无法判断带泛型的类型：
+  4).不能实例化T类型：
+9.不能获取带泛型类型的Class，例如：Pair<String>.class；
+10.不能判断带泛型类型的类型，例如：x instanceof Pair<String>；
+11.不能实例化T类型，例如：new T()。
+12.泛型方法要防止重复定义方法，例如：public boolean equals(T obj)；
+13.泛型继承,在继承了泛型类型的情况下，子类可以获取父类的泛型类型。
+
+使用extends限定参数
+1.使用类似<? extends Number>通配符作为方法参数时表示：
+	方法内部可以调用获取Number引用的方法，例如：Number n = obj.getFirst();；
+	方法内部无法调用传入Number引用的方法（null除外），例如：obj.setFirst(Number n);。
+一句话总结：使用extends通配符表示可以读，不能写。
+
+如方法参数类型List<? extends Integer>表明了该方法内部只会读取List的元素，不会修改List的元素（因为无法调用add(? extends Integer)、remove(? extends Integer)这些方法。换句话说，这是一个对参数List<? extends Integer>进行只读的方法（恶意调用set(null)除外）。
+2.使用类似<T extends Number>定义泛型类时表示：
+泛型类型限定为Number以及Number的子类。
+
+使用super通配符
+1.使用<? super Integer>通配符表示：
+	允许调用set(? super Integer)方法传入Integer的引用；
+	不允许调用get()方法获得Integer的引用。
+	唯一例外是可以获取Object的引用：Object o = p.getFirst()。
+ 换句话说，使用<? super Integer>通配符作为方法参数，表示方法内部代码对于参数只能写，不能读。
+
+对比extends和super通配符
+1.<? extends T>允许调用读方法T get()获取T的引用，但不允许调用写方法set(T)传入T的引用（传入null除外）；
+2.<? super T>允许调用写方法set(T)传入T的引用，但不允许调用读方法T get()获取T的引用（获取Object除外）。
+一个是允许读不允许写，另一个是允许写不允许读。
+
+PECS原则，无限定通配符
+1.Producer Extends Consumer Super。即，如果需要返回T，它是生产者（Producer），要使用extends通配符；如果需要写入T，它是消费者（Consumer），要使用super通配符。
+2.无限定通配符，即只定义一个?
+	1).不允许调用set(T)方法并传入引用（null除外）；
+	2).不允许调用T get()方法并获取T引用（只能获取Object引用）。
+	换句话说，既不能读，也不能写，那只能做一些null判断：
+    3).<?>通配符有一个独特的特点，就是：Pair<?>是所有Pair<T>的超类：
+	4).无限定通配符<?>很少使用，可以用<T>替换，同时它是所有<T>类型的超类。
+
+集合
+1.Java的java.util包主要提供了以下三种类型的集合：
+	List：一种有序列表的集合，例如，按索引排列的Student的List；
+	Set：一种保证没有重复元素的集合，例如，所有无重复名称的Student的Set；
+	Map：一种通过键值（key-value）查找的映射表集合，例如，根据Student的name查找对应Student的Map。
+2.Java访问集合总是通过统一的方式——迭代器（Iterator）;
+3.ArrayList，LinkedList(内部每个元素都指向下一个元素)
+	1).ArrayList和LinkedList：
+						ArrayList	LinkedList
+	获取指定元素		速度很快	需要从头开始查找元素
+	添加元素到末尾		速度很快	速度很快
+	指定位置添加/删除	需移动元素	无需移动元素
+	内存占用			少			较大
+	
+	2).List<E>接口，可以看到几个主要的接口方法：
+	在末尾添加一个元素：boolean add(E e)
+	在指定索引添加一个元素：boolean add(int index, E e)
+	删除指定索引的元素：int remove(int index)
+	删除某个元素：int remove(Object e)
+	获取指定索引的元素：E get(int index)
+	获取链表大小（包含元素的个数）：int size()
+	
+    3).通常情况下，优先使用ArrayList
+
+4.List的特点
+  1).List接口允许添加重复的元素，即List内部的元素可以重复：
+  2).List还允许添加null：
+  3).可以通过List接口提供的of()方法，根据给定元素快速创建List：
+	List<Integer> list = List.of(1, 2, 5);
+  4).但List.of()方法不接受null值，如果传入null，会抛出NullPointerException异常。
+  5).遍历List:for,for-iterator,for each(推荐)
+		List<String> list = List.of("apple", "pear", "banana");
+        for (String s : list) {
+            System.out.println(s);
+        }
+
+5.List和Array转换
+ 1).List ==> Array 有三种方法
+    第一种是调用toArray()方法直接返回一个Object[]数组，这种方法会丢失类型信息，所以实际应用很少。：
+		List<String> list = List.of("apple", "pear", "banana");
+		Object[] array = list.toArray();
+		for (Object s : array) {
+			System.out.println(s);
+		}
+	第二种方式是给toArray(T[])传入一个类型相同的Array，List内部自动把元素复制到传入的Array中：  
+		List<Integer> list = List.of(12, 34, 56);
+        Integer[] array = list.toArray(new Integer[3]);
+        for (Integer n : array) {
+            System.out.println(n);
+        }
+
+        List<String> ll = List.of("apple","pear","watermelon","banana");
+        String[] ss = ll.toArray(new String[ll.size()]);
+        System.out.println(Arrays.toString(ss));
+	最后一种更简洁的写法是通过List接口定义的T[] toArray(IntFunction<T[]> generator)方法：
+		List<String> ll = List.of("apple","pear","watermelon","banana");
+		String[] ss = ll.toArray(String[]::new);
+ 2).Array ==> List , 通过List.of(T...)方法最简单：
+	Integer[] array = { 1, 2, 3 };
+	List<Integer> list = List.of(array);
+	注，对于JDK 11之前的版本，可以使用Arrays.asList(T...)方法把数组转换成List。	
+
+6.对只读List调用add()、remove()方法会抛出UnsupportedOperationException。
+7.List还提供了boolean contains(Object o)方法来判断List是否包含某个指定元素，int indexOf(Object o)方法可以返回某个元素的索引，如果元素不存在，就返回-1。。
+    List<String> list = List.of("A", "B", "C");
+	System.out.println(list.contains("C")); // true
+	System.out.println(list.contains("X")); // false
+	System.out.println(list.indexOf("C")); // 2
+	System.out.println(list.indexOf("X")); // -1
+ 注意：
+  1).contains，indexOf 在List内部并不是通过==判断两个元素是否相等，而是使用equals()方法判断两个元素是否相等。
+  2).对于引用字段比较，我们使用 equals()，对于基本类型字段的比较，我们使用==.
+
+总结一下equals()方法的正确编写方法：
+	1).先确定实例“相等”的逻辑，即哪些字段相等，就认为实例相等；
+	2).用instanceof判断传入的待比较的Object是不是当前类型，如果是，继续比较，否则，返回false；
+	3).对引用类型用Objects.equals()比较，对基本类型直接用==比较。
+	4).使用Objects.equals()比较两个引用类型是否相等的目的是省去了判断null的麻烦。两个引用类型都是null时它们也是相等的。
+	5).如果不调用List的contains()、indexOf()这些方法，那么放入的元素就不需要实现equals()方法。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
