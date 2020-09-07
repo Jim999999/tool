@@ -297,7 +297,33 @@ PECS原则，无限定通配符
 	4).使用Objects.equals()比较两个引用类型是否相等的目的是省去了判断null的麻烦。两个引用类型都是null时它们也是相等的。
 	5).如果不调用List的contains()、indexOf()这些方法，那么放入的元素就不需要实现equals()方法。
 
+Map映射表
+1.Map是一种映射表，可以通过key快速查找value。
+2.map.input(name,value)方法，如果放入的key已经存在，put()方法会返回被删除的旧的value，否则，返回null。
+3.可以通过for each遍历keySet()，也可以通过for each遍历entrySet()，直接获取key-value。
+	// keySet()
+	Map<String, Integer> map = new HashMap<>();
+	map.put("apple", 123);
+	map.put("pear", 456);
+	map.put("banana", 789);
+	for (String key : map.keySet()) {
+		Integer value = map.get(key);
+		System.out.println(key + " = " + value);
+	}
 
+	// Map.Entry
+	Map<String, Integer> map = new HashMap<>();
+	map.put("apple", 123);
+	map.put("pear", 456);
+	map.put("banana", 789);
+	for (Map.Entry<String, Integer> entry : map.entrySet()) {
+		String key = entry.getKey();
+		Integer value = entry.getValue();
+		System.out.println(key + " = " + value);
+	}
+
+4.Map和List不同的是，Map存储的是key-value的映射关系，并且，它不保证顺序。
+5.最常用的一种Map实现是HashMap，当缓存用。
 
 
 
