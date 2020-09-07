@@ -324,15 +324,60 @@ Map映射表
 
 4.Map和List不同的是，Map存储的是key-value的映射关系，并且，它不保证顺序。
 5.最常用的一种Map实现是HashMap，当缓存用。
+6.正确使用Map必须保证：
+	作为key的对象必须正确覆写equals()方法，相等的两个key实例调用equals()必须返回true；
+	作为key的对象还必须正确覆写hashCode()方法，且hashCode()方法要严格遵循以下规范：
+		如果两个对象相等，则两个对象的hashCode()必须相等；
+		如果两个对象不相等，则两个对象的hashCode()尽量不要相等。
+		即对应两个实例a和b：
+		如果a和b相等，那么a.equals(b)一定为true，则a.hashCode()必须等于b.hashCode()；
+		如果a和b不相等，那么a.equals(b)一定为false，则a.hashCode()和b.hashCode()尽量不要相等。
+7.为了解决字段计算hashCode抛出NullPointerException，需借助 Objects.hash() 来计算：
+	int hashCode() {
+		return Objects.hash(firstName, lastName, age);
+	}
+8.编写equals()和hashCode()遵循的原则是：equals()用到的用于比较的每一个字段，都必须在hashCode()中用于计算；equals()中没有使用到的字段，绝不可放在hashCode()中计算，对于放入HashMap的value对象，没有任何要求。
+9.如果Map的key是enum类型，推荐使用EnumMap，既保证速度，也不浪费空间。
+	import java.time.DayOfWeek;
+	import java.util.*;
+	public class Main {
+		public static void main(String[] args) {
+			Map<DayOfWeek, String> map = new EnumMap<>(DayOfWeek.class);
+			map.put(DayOfWeek.MONDAY, "星期一");
+			map.put(DayOfWeek.TUESDAY, "星期二");
+			map.put(DayOfWeek.WEDNESDAY, "星期三");
+			map.put(DayOfWeek.THURSDAY, "星期四");
+			map.put(DayOfWeek.FRIDAY, "星期五");
+			map.put(DayOfWeek.SATURDAY, "星期六");
+			map.put(DayOfWeek.SUNDAY, "星期日");
+			System.out.println(map);
+			System.out.println(map.get(DayOfWeek.MONDAY));
+		}
+	}
 
-
-
-
-
-
-
-
-
+8.在内部对Key进行排序，这种Map就是SortedMap。注意到SortedMap是接口，它的实现类是TreeMap，需要注意的是TreeMap不使用equals()和hashCode()。
+       ┌───┐
+       │Map│
+       └───┘
+         ▲
+    ┌────┴─────┐
+    │          │
+┌───────┐ ┌─────────┐
+│HashMap│ │SortedMap│
+└───────┘ └─────────┘
+               ▲
+               │
+          ┌─────────┐
+          │ TreeMap │
+          └─────────┘
+	Map<String, Integer> map = new TreeMap<>();
+	map.put("orange", 1);
+	map.put("apple", 2);
+	map.put("pear", 3);
+	for (String key : map.keySet()) {
+		System.out.println(key);
+	}
+	// apple, orange, pear
 
 
 
