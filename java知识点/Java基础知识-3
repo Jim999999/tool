@@ -378,6 +378,110 @@ Map映射表
 		System.out.println(key);
 	}
 	// apple, orange, pear
+  注意，作为SortedMap的Key必须实现Comparable接口，或者传入Comparator；
+		1.String、Integer这些类已经实现了Comparable接口，因此可以直接作为Key使用：p1.name.compareTo(p2.name) 和 Integer.compare(int, int)
+		2.或者自定义：
+		  Map<Student, Integer> map = new TreeMap<>(new Comparator<Student>() {
+            public int compare(Student p1, Student p2) {
+                return p1.score > p2.score ? (p1.score == p2.score ? 0 : 1) : 1;
+            }
+        });
+9. Java集合库提供了一个Properties来表示一组“配置”,Java默认配置文件以.properties为扩展名，每行以key=value表示，以#课开头的是注释。
+	用Properties读取配置文件，一共有三步：
+	1). 创建Properties实例；
+	2). 调用load()读取文件；
+	3). 调用getProperty()获取配置。
+	String f = "setting.properties";
+	Properties props = new Properties();
+	props.load(new java.io.FileInputStream(f));  // props.load(getClass().getResourceAsStream("/common/setting.properties"));
+
+	String filepath = props.getProperty("last_open_file"); //key不存在，将返回null
+	String interval = props.getProperty("auto_save_interval", "120");
+
+    写入配置文件 -- 用setProperty后调用store
+	Properties props = new Properties();
+	props.setProperty("url", "http://www.liaoxuefeng.com");
+	props.setProperty("language", "Java");
+	props.store(new FileOutputStream("C:\\conf\\setting.properties"), "这是写入的properties注释");
+    注意，由于load(InputStream)默认总是以ASCII编码读取字节流，所以会导致读到乱码。所以需要用另一个重载方法load(Reader)读取：
+	Properties props = new Properties();
+	props.load(new FileReader("settings.properties", StandardCharsets.UTF_8));
+10.只需存储不重复的key，并不需要存储映射的value，那么就可以使用Set。
+	Set用于存储不重复的元素集合，它主要提供以下几个方法：
+	将元素添加进Set<E>：boolean add(E e)
+	将元素从Set<E>删除：boolean remove(Object e)
+	判断是否包含元素：boolean contains(Object e)
+	元素个数：Integer e.size()
+	
+	Set<String> set = new HashSet<>();
+	System.out.println(set.add("xyz")); // true
+	System.out.println(set.add("xyz")); // false，添加失败，因为元素已存在
+	System.out.println(set.contains("xyz")); // true，元素存在
+	System.out.println(set.size()); // 2，一共两个元素
+	System.out.println(set.remove("hello")); // false，删除失败，因为元素不存在
+	  
+   注意: 1).Set实际上相当于只存储key、不存储value的Map。我们经常用Set用于去除重复元素。
+         2).要正确实现equals()和hashCode()方法，否则该元素无法正确地放入Set。
+         3).Set接口并不保证有序，而SortedSet接口则保证元素是有序的：
+				HashSet是无序的，因为它实现了Set接口，并没有实现SortedSet接口；
+				TreeSet是有序的，因为它实现了SortedSet接口。
+       ┌───┐
+       │Set│
+       └───┘
+         ▲
+    ┌────┴─────┐
+    │          │
+┌───────┐ ┌─────────┐
+│HashSet│ │SortedSet│
+└───────┘ └─────────┘
+               ▲
+               │
+          ┌─────────┐
+          │ TreeSet │
+          └─────────┘
+	使用TreeSet和使用TreeMap的要求一样，添加的元素必须正确实现Comparable接口，如果没有实现Comparable接口，那么创建TreeSet时必须传入一个Comparator对象。
+	
+队列
+1.队列接口Queue定义了以下几个方法：
+	int size()：获取队列长度；
+	boolean add(E)/boolean offer(E)：添加元素到队尾；
+	E remove()/E poll()：获取队首元素并从队列中删除；
+	E element()/E peek()：获取队首元素但并不从队列中删除。
+2.返回值不同
+					throw Exception	    返回false或null
+添加元素到队尾		add(E e)			boolean offer(E e)
+取队首元素并删除	E remove()			E poll()
+取队首元素但不删除	E element()			E peek()
+
+注意，避免把null添加到队列。
+
+3.LinkedList即实现了List接口，又实现了Queue接口，在使用的时候，如果把它当作List，就获取List的引用，如果把它当作Queue，就获取Queue的引用：
+	// 这是一个List:
+	List<String> list = new LinkedList<>();
+	// 这是一个Queue:
+	Queue<String> queue = new LinkedList<>();
+
+4.优先队列：PriorityQueue
+  1).对PriorityQueue调用remove()或poll()方法，返回的总是优先级最高的元素。
+  2).放入PriorityQueue的元素，必须实现Comparable接口，PriorityQueue会根据元素的排序顺序决定出队的优先级。
+
+5.两头都进，两头都出，这种队列叫双端队列（Double Ended Queue），学名Deque。
+  1).接口Deque来实现一个双端队列，它的功能是：
+	既可以添加到队尾，也可以添加到队首；
+	既可以从队首获取，又可以从队尾获取。
+
+  2).比较一下Queue和Deque出队和入队的方法：
+							Queue						Deque
+	添加元素到队尾		add(E e) / offer(E e)		addLast(E e) / offerLast(E e)
+	取队首元素并删除	E remove() / E poll()		E removeFirst() / E pollFirst()
+	取队首元素但不删除	E element() / E peek()		E getFirst() / E peekFirst()
+	添加元素到队首		无							addFirst(E e) / offerFirst(E e)
+	取队尾元素并删除	无							E removeLast() / E pollLast()
+	取队尾元素但不删除	无							E getLast() / E peekLast()
+
+
+
+
 
 
 
