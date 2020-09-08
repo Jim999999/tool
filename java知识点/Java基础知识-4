@@ -1,0 +1,101 @@
+IO操作
+1.IO是指Input/Output，即输入和输出。以内存为中心：
+	Input指从外部读入数据到内存，例如，把文件从磁盘读取到内存，从网络读取数据到内存等等。
+	Output指把数据从内存输出到外部，例如，把数据从内存写入到文件，把数据从内存输出到网络等等。
+2.IO流是一种顺序读写数据的模式，它的特点是单向流动。数据类似自来水一样在水管中流动，所以我们把它称为IO流。
+3.InputStream / OutputStream
+ 1).IO流以byte（字节）为最小单位，因此也称为字节流。
+
+4.Reader / Writer
+  1).如果需要读写的是字符，并且字符不全是单字节表示的ASCII字符，那么，按照char来读写显然更方便，这种流称为 --- 字符流。
+  2).Java提供了Reader和Writer表示字符流，字符流传输的最小数据单位是char。
+  3).Reader和Writer本质上是一个能自动编解码的InputStream和OutputStream。
+5.同步和异步
+	5.1.同步异步优缺点：
+		1).同步IO是指，读写IO时代码必须等待数据返回后才继续执行后续代码，它的优点是代码编写简单，缺点是CPU执行效率低。
+		2).而异步IO是指，读写IO时仅发出请求，然后立刻执行后续代码，它的优点是CPU执行效率高，缺点是代码编写复杂。
+	5.2.Java标准库的包java.io提供了同步IO，而java.nio则是异步IO。
+
+6.IO流是一种流式的数据输入/输出模型：
+	二进制数据以byte为最小单位在InputStream/OutputStream中单向流动；
+	字符数据以char为最小单位在Reader/Writer中单向流动。
+	Java标准库的java.io包提供了同步IO功能：
+	字节流接口：InputStream/OutputStream；
+	字符流接口：Reader/Writer。
+
+File对象
+1.Java的标准库java.io提供了File对象来操作文件和目录。
+2.要构造一个File对象，需要传入文件路径：
+	File f = new File("C:\\Windows\\notepad.exe");  //既可以传入绝对路径，也可以传入相对路径
+    System.out.println(f);
+	注意，Windows平台使用\作为路径分隔符，在Java字符串中需要用\\表示一个\。Linux平台使用/作为路径分隔符。
+3.File对象有3种形式表示的路径，一种是getPath()，返回构造方法传入的路径，一种是getAbsolutePath()，返回绝对路径，一种是getCanonicalPath，它和绝对路径类似，但是返回的是规范路径（就是把.和..转换成标准的绝对路径后的路径：C:\Windows\notepad.exe）。
+4.因为Windows和Linux的路径分隔符不同，File对象有一个静态变量用于表示当前平台的系统分隔符：
+	System.out.println(File.separator); // 根据当前平台打印"\"或"/"
+5.File对象既可以表示文件，也可以表示目录。特别要注意的是，构造一个File对象，即使传入的文件或目录不存在，代码也不会出错，因为构造一个File对象，并不会导致任何磁盘操作。只有当我们调用File对象的某些方法的时候，才真正进行磁盘操作。
+6.File对象的方法：isFile(),isDirectory()
+	用File对象获取到一个文件时，还可以进一步判断文件的权限和大小：
+	boolean canRead()：是否可读；
+	boolean canWrite()：是否可写；
+	boolean canExecute()：是否可执行；
+	long length()：文件字节大小。
+  注，对目录而言，是否可执行表示能否列出它包含的文件和子目录。  
+7.创建和删除文件
+    1).当File对象表示一个文件时，可以通过createNewFile()创建一个新文件，用delete()删除该文件：
+		File file = new File("/path/to/newFileName");  //要创建的文件名
+		if (file.createNewFile()) {
+			// 文件创建成功:
+			// TODO:
+			if (file.delete()) {
+				// 删除文件成功:
+			}
+		}
+	2).程序读写一些临时文件，File对象提供了createTempFile()来创建一个临时文件，以及deleteOnExit()在JVM退出时自动删除该文件。
+		File f = File.createTempFile("tmp-", ".txt"); // 提供临时文件的前缀和后缀
+        f.deleteOnExit(); // JVM退出时自动删除
+        System.out.println(f.isFile());
+        System.out.println(f.getAbsolutePath());
+		
+8.遍历文件和目录
+	1).当File对象表示一个目录时，可以使用list()和listFiles()列出目录下的文件和子目录名。
+	2).File对象如果表示一个目录，可以通过以下方法创建和删除目录：
+		boolean mkdir()：创建当前File对象表示的目录；
+		boolean mkdirs()：创建当前File对象表示的目录，并在必要时将不存在的父目录也创建出来；
+		boolean delete()：删除当前File对象表示的目录，当前目录必须为空才能删除成功。
+	3).Path对象
+	   Java标准库还提供了一个Path对象，它位于java.nio.file包。Path对象和File对象类似，但操作更加简单：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
