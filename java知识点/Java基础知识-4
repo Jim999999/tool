@@ -65,6 +65,80 @@ File对象
 	3).Path对象
 	   Java标准库还提供了一个Path对象，它位于java.nio.file包。Path对象和File对象类似，但操作更加简单：
 
+9.InputStream就是Java标准库提供的最基本的输入流。它位于java.io这个包里。java.io包提供了所有同步IO的功能。
+  1).InputStream并不是一个接口，而是一个抽象类，它是所有输入流的超类。
+     这个抽象类定义的一个最重要的方法就是int read(),会读取输入流的下一个字节，并返回字节表示的int值（0~255）。如果已读到末尾，返回-1表示不能继续读取了。
+  2).FileInputStream是InputStream的一个子类。
+  3).InputStream和OutputStream都是通过close()方法来关闭流。
+		public void readFile() throws IOException {
+			try (InputStream input = new FileInputStream("src/readme.txt")) {
+				int n;
+				while ((n = input.read()) != -1) {
+					System.out.println(n);
+				}
+			} // 编译器在此自动为我们写入finally并调用close()
+		}
+		注意，新的try(resource)的语法，只需要编写try语句，让编译器自动为我们关闭资源。
+   4).很多流支持一次性读取多个字节到缓冲区，对于文件和网络流来说，利用缓冲区一次性读取多个字节效率往往要高很多。InputStream提供了两个重载方法来支持读取多个字节：
+		int read(byte[] b)：读取若干字节并填充到byte[]数组，返回读取的字节数
+		int read(byte[] b, int off, int len)：指定byte[]数组的偏移量和最大填充数
+
+		public void readFile() throws IOException {
+			try (InputStream input = new FileInputStream("src/readme.txt")) {
+				// 定义1000个字节大小的缓冲区:
+				byte[] buffer = new byte[1000];
+				int n;
+				while ((n = input.read(buffer)) != -1) { // 读取到缓冲区
+					System.out.println("read " + n + " bytes.");
+				}
+			}
+		}
+	5).用FileInputStream可以从文件获取输入流，这是InputStream常用的一个实现类。此外，ByteArrayInputStream可以在内存中模拟一个InputStream：
+		public static void main(String[] args) throws IOException {
+			byte[] data = { 72, 101, 108, 108, 111, 33 };
+			try (InputStream input = new ByteArrayInputStream(data)) {
+				int n;
+				while ((n = input.read()) != -1) {
+					System.out.println((char)n);
+				}
+			}
+		}
+10.Java标准库的java.io.OutputStream定义了所有输出流的超类：
+	FileOutputStream实现了文件流输出；
+	ByteArrayOutputStream在内存中模拟一个字节流输出。
+	某些情况下需要手动调用OutputStream的flush()方法来强制输出缓冲区。
+	总是使用try(resource)来保证OutputStream正确关闭。
+
+11.Filter模式
+1.通过一个“基础”组件再叠加各种“附加”功能组件的模式（或者装饰器模式：Decorator）.
+2.Java的IO标准库提供的InputStream根据来源可以包括：
+	FileInputStream：从文件读取数据，是最终数据源；
+	ServletInputStream：从HTTP请求读取数据，是最终数据源；
+	Socket.getInputStream()：从TCP连接读取数据，是最终数据源；
+	...
+3.Java的IO标准库使用Filter模式为InputStream和OutputStream增加功能：
+	可以把一个InputStream和任意个FilterInputStream组合；
+	可以把一个OutputStream和任意个FilterOutputStream组合。
+
+12.操作Zip
+1.ZipInputStream是一种FilterInputStream，它可以直接读取zip包的内容：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
