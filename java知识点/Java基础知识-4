@@ -110,7 +110,7 @@ File对象
 	总是使用try(resource)来保证OutputStream正确关闭。
 
 11.Filter模式
-1.通过一个“基础”组件再叠加各种“附加”功能组件的模式（或者装饰器模式：Decorator）.
+1.Filter模式是通过一个“基础”组件再叠加各种“附加”功能组件的模式（或者装饰器模式：Decorator）.
 2.Java的IO标准库提供的InputStream根据来源可以包括：
 	FileInputStream：从文件读取数据，是最终数据源；
 	ServletInputStream：从HTTP请求读取数据，是最终数据源；
@@ -122,6 +122,415 @@ File对象
 
 12.操作Zip
 1.ZipInputStream是一种FilterInputStream，它可以直接读取zip包的内容：
+	┌───────────────────┐
+	│    InputStream    │
+	└───────────────────┘
+			  ▲
+			  │
+	┌───────────────────┐
+	│ FilterInputStream │
+	└───────────────────┘
+			  ▲
+			  │
+	┌───────────────────┐
+	│InflaterInputStream│
+	└───────────────────┘
+			  ▲
+			  │
+	┌───────────────────┐
+	│  ZipInputStream   │
+	└───────────────────┘
+			  ▲
+			  │
+	┌───────────────────┐
+	│  JarInputStream   │
+	└───────────────────┘
+	另一个JarInputStream是从ZipInputStream派生，它增加的主要功能是直接读取jar文件里面的 MANIFEST.MF 文件。因为本质上jar包就是zip包，只是额外附加了一些固定的描述文件。
+2.ZipInputStream的基本用法
+  1).创建一个ZipInputStream，通常是传入一个FileInputStream作为数据源，然后，循环调用getNextEntry()，直到返回null，表示zip流结束。
+  2).读取zip包
+    一个ZipEntry表示一个压缩文件或目录，如果是压缩文件，我们就用read()方法不断读取，直到返回-1：
+		try (ZipInputStream zip = new ZipInputStream(new FileInputStream(...))) {
+			ZipEntry entry = null;
+			while ((entry = zip.getNextEntry()) != null) {
+				String name = entry.getName();
+				if (!entry.isDirectory()) {
+					int n;
+					while ((n = zip.read()) != -1) {
+						...
+					}
+				}
+			}
+		}
+    3).写入zip包
+		1).ZipOutputStream是一种FilterOutputStream，它可以直接写入内容到zip包。
+		2).先创建一个ZipOutputStream，通常是包装一个FileOutputStream，然后，每写入一个文件前，先调用putNextEntry()，然后用write()写入byte[]数据，写入完毕后调用closeEntry()结束这个文件的打包。
+			try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(...))) {
+				File[] files = ...
+				for (File file : files) {
+					zip.putNextEntry(new ZipEntry(file.getName()));
+					zip.write(getFileDataAsBytes(file));
+					zip.closeEntry();
+				}
+			}
+
+3.ZipInputStream可以读取zip格式的流，ZipOutputStream可以把多份数据写入zip包；配合FileInputStream和FileOutputStream就可以读写zip文件。
+
+读取classpath资源
+1.把资源存储在classpath中可以避免文件路径依赖；
+
+2.Class对象的getResourceAsStream()可以从classpath中读取指定资源；
+
+3.根据classpath读取资源时，需要检查返回的InputStream是否为null。
+4.从一个.properties文件中读取配置：	
+	String conf = "C:\\conf\\default.properties";
+	try (InputStream input = new FileInputStream(conf)) {
+		// TODO:
+	}
+
+	//不依赖路径
+	try (InputStream input = getClass().getResourceAsStream("/default.properties")) {
+		if (input != null) {
+			// TODO:
+		}
+	}
+5.把默认的配置放到jar包中，再从外部文件系统读取一个可选的配置文件，就可以做到既有默认的配置文件，又可以让用户自己修改配置：
+	Properties props = new Properties();
+	props.load(inputStreamFromClassPath("/default.properties"));
+	props.load(inputStreamFromFile("./conf.properties"));
+
+序列化与反序列化
+1.是指把一个Java对象变成二进制内容，本质上就是一个byte[]数组。
+2.反序列化，即把一个二进制内容（也就是byte[]数组）变回Java对象。
+3.一个Java对象要能序列化，必须实现一个特殊的java.io.Serializable接口，Serializable接口没有定义任何方法，它是一个空接口。我们把这样的空接口称为“标记接口”（Marker Interface），实现了标记接口的类仅仅是给自身贴了个“标记”，并没有增加任何方法。
+4.把一个Java对象变为byte[]数组，需要使用 ObjectOutputStream。它负责把一个Java对象写入一个字节流：
+	import java.io.*;
+	import java.util.Arrays;
+	public class Main {
+		public static void main(String[] args) throws IOException {
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			try (ObjectOutputStream output = new ObjectOutputStream(buffer)) {
+				// 写入int:
+				output.writeInt(12345);
+				// 写入String:
+				output.writeUTF("Hello");
+				// 写入Object:
+				output.writeObject(Double.valueOf(123.456));
+			}
+			System.out.println(Arrays.toString(buffer.toByteArray()));
+		}
+	}
+    ObjectOutputStream既可以写入基本类型，如int，boolean，也可以写入String（以UTF-8编码），还可以写入实现了Serializable接口的Object。因为写入Object时需要大量的类型信息，所以写入的内容很大。
+
+5.反序列化
+	1).和ObjectOutputStream相反，ObjectInputStream负责从一个字节流读取Java对象：
+		try (ObjectInputStream input = new ObjectInputStream(...)) {
+			int n = input.readInt();
+			String s = input.readUTF();
+			Double d = (Double) input.readObject();
+		}
+	2).除了能读取基本类型和String类型外，调用readObject()可以直接返回一个Object对象。要把它变成一个特定类型，必须强制转型。
+	3).readObject()可能抛出的异常有：
+		ClassNotFoundException：没有找到对应的Class；
+		InvalidClassException：Class不匹配。
+    4).反序列化时不调用构造方法，可设置serialVersionUID作为版本号（非必需）； 
+
+6.Reader
+  1).Reader是Java的IO库提供的另一个输入流接口。和InputStream的区别是，InputStream是一个字节流，即以byte为单位读取，而Reader是一个字符流，即以char为单位读取：
+	InputStream								Reader
+	字节流，以byte为单位					字符流，以char为单位
+	读取字节（-1，0~255）：int read()		读取字符（-1，0~65535）：int read()
+	读到字节数组：int read(byte[] b)		读到字符数组：int read(char[] c)
+  2).java.io.Reader是所有字符输入流的超类，它最主要的方法是：
+		public int read() throws IOException;
+	这个方法读取字符流的下一个字符，并返回字符表示的int，范围是0~65535。如果已读到末尾，返回-1。
+
+  3).FileReader是Reader的一个子类，它可以打开文件并获取Reader。 
+		public void readFile() throws IOException {
+			// 创建一个FileReader对象:
+			Reader reader = new FileReader("src/readme.txt", StandardCharsets.UTF_8); // 字符编码是???
+			for (;;) {
+				int n = reader.read(); // 反复调用read()方法，直到返回-1
+				if (n == -1) {
+					break;
+				}
+				System.out.println((char)n); // 打印char
+			}
+			reader.close(); // 关闭流
+		}
+
+		==> 优化
+		public void readFile() throws IOException {
+			try (Reader reader = new FileReader("src/readme.txt", StandardCharsets.UTF_8)) {
+				char[] buffer = new char[1000];
+				int n;
+				while ((n = reader.read(buffer)) != -1) {
+					System.out.println("read " + n + " chars.");
+				}
+			}
+		}
+   4).CharArrayReader 可以在内存中模拟一个Reader，它的作用实际上是把一个char[]数组变成一个Reader，这和 ByteArrayInputStream 非常类似：
+		try (Reader reader = new CharArrayReader("Hello".toCharArray())) {
+		}   
+   5).StringReader 可以直接把String作为数据源，它和 CharArrayReader几乎一样：		
+		try (Reader reader = new StringReader("Hello")) {
+		}
+   6). InputStreamReader 可以把任何 InputStream 转换为Reader (Reader本质上是一个基于InputStream的byte到char的转换器).
+		// 持有InputStream:
+		InputStream input = new FileInputStream("src/readme.txt");
+		// 变换为Reader:
+		Reader reader = new InputStreamReader(input, "UTF-8");
+		
+		// 通过try (resource)更简洁地改写
+		try (Reader reader = new InputStreamReader(new FileInputStream("src/readme.txt"), "UTF-8")) {
+			// TODO:
+		}
+   7).Reader是基于InputStream构造的：可以通过InputStreamReader在指定编码的同时将任何InputStream转换为Reader。
+
+7.Writer
+   1).Reader是带编码转换器的InputStream，它把byte转换为char，而Writer就是带编码转换器的OutputStream，它把char转换为byte并输出。Writer和OutputStream的区别如下：
+		OutputStream							Writer
+		字节流，以byte为单位					字符流，以char为单位
+		写入字节（0~255）：void write(int b)	写入字符（0~65535）：void write(int c)
+		写入字节数组：void write(byte[] b)		写入字符数组：void write(char[] c)
+		无对应方法								写入String：void write(String s)
+
+   2).Writer是所有字符输出流的超类，它提供的方法主要有：
+		写入一个字符（0~65535）：void write(int c)；
+		写入字符数组的所有字符：void write(char[] c)；
+		写入String表示的所有字符：void write(String s)。
+   3).FileWriter就是向文件中写入字符流的Writer。它的使用方法和FileReader类似： 
+		try (Writer writer = new FileWriter("readme.txt", StandardCharsets.UTF_8)) {
+			writer.write('H'); // 写入单个字符
+			writer.write("Hello".toCharArray()); // 写入char[]
+			writer.write("Hello"); // 写入String
+		}
+   4).CharArrayWriter可以在内存中创建一个Writer，它的作用实际上是构造一个缓冲区，可以写入char，最后得到写入的char[]数组，这和ByteArrayOutputStream非常类似：
+
+		try (CharArrayWriter writer = new CharArrayWriter()) {
+			writer.write(65);
+			writer.write(66);
+			writer.write(67);
+			char[] data = writer.toCharArray(); // { 'A', 'B', 'C' }
+		}
+   5).StringWriter也是一个基于内存的Writer，它和CharArrayWriter类似。实际上，StringWriter在内部维护了一个StringBuffer，并对外提供了Writer接口。
+   6).OutputStreamWriter 是一个将任意的OutputStream转换为Writer的转换器 (Writer实际上是基于OutputStream构造，并接收char，然后在内部自动转换成一个或多个byte，并写入OutputStream)：
+		try (Writer writer = new OutputStreamWriter(new FileOutputStream("readme.txt"), "UTF-8")) {
+			// TODO:
+		}
+	  上述代码实际上就是FileWriter的一种实现方式。这和上一节的InputStreamReader是一样的。
+   7).Writer定义了所有字符输出流的超类：
+		FileWriter实现了文件字符流输出；
+		CharArrayWriter和StringWriter在内存中模拟一个字符流输出。
+		
+8.PrintStream 和 PrintWriter
+   1).PrintStream是一种FilterOutputStream，它在OutputStream的接口上，额外提供了一些写入各种数据类型的方法：
+		写入int：print(int)
+		写入boolean：print(boolean)
+		写入String：print(String)
+		写入Object：print(Object)，实际上相当于print(object.toString())
+   2).PrintStream 最终输出的总是byte数据，而PrintWriter则是扩展了Writer接口，它的print()/println()方法最终输出的是char数据。
+   3).PrintStream是一种能接收各种数据类型的输出，打印数据时比较方便：
+		System.out是标准输出；
+		System.err是标准错误输出。
+
+时间和日期
+1.在Java程序中，时间戳是用long表示的毫秒数，如以毫秒为单位的整数：1574208900123，最后3位表示毫秒数。
+2.获取当前时间戳，可以使用 System.currentTimeMillis()。
+3.Java标准库有两套处理日期和时间的API：
+	一套定义在java.util这个包里面，主要包括Date、Calendar和TimeZone这几个类；
+	一套新的API是在Java 8引入的，定义在java.time这个包里面，主要包括LocalDateTime、ZonedDateTime、ZoneId等。
+  1).java.util.Date是用于表示一个日期和时间的对象.
+		import java.util.*;
+		// 获取当前时间:
+        Date date = new Date();
+        System.out.println(date.getYear() + 1900); // 必须加上1900
+        System.out.println(date.getMonth() + 1);   // 0~11，必须加上1
+        System.out.println(date.getDate());        // 1~31，不能加1
+        // 转换为String:
+        System.out.println(date.toString());        // Wed Sep 09 05:59:04 UTC 2020
+        // 转换为GMT时区:	
+        System.out.println(date.toGMTString());     // 9 Sep 2020 05:59:04 GMT
+        // 转换为本地时区:
+        System.out.println(date.toLocaleString());  // Sep 9, 2020, 5:59:04 AM
+
+   2).本地格式化 SimpleDateFormat
+		yyyy：年
+		MM：月
+		dd: 日
+		HH: 小时
+		mm: 分钟
+		ss: 秒
+			import java.text.*;
+			import java.util.*;
+			// 获取当前时间:
+			Date date = new Date();
+			var sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			System.out.println(sdf.format(date));
+   3). Calendar用于获取并设置年、月、日、时、分、秒，它和Date比，主要多了一个可以做简单的日期和时间运算的功能。
+		import java.util.*;
+        // 获取当前时间:
+        Calendar c = Calendar.getInstance();
+        int y = c.get(Calendar.YEAR);
+        int m = 1 + c.get(Calendar.MONTH);
+        int d = c.get(Calendar.DAY_OF_MONTH);
+        int w = c.get(Calendar.DAY_OF_WEEK);
+        int hh = c.get(Calendar.HOUR_OF_DAY);
+        int mm = c.get(Calendar.MINUTE);
+        int ss = c.get(Calendar.SECOND);
+        int ms = c.get(Calendar.MILLISECOND);
+        System.out.println(y + "-" + m + "-" + d + " " + w + " " + hh + ":" + mm + ":" + ss + "." + ms);
+      注，
+	  3-1).利用Calendar.getTime()可以将一个Calendar对象转换成Date对象，然后就可以用SimpleDateFormat进行格式化了。
+			Date dd = Calendar.getInstance().getTime();
+			var sl = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			System.out.println(sl.format(dd));
+      3-2).Calendar和Date相比，它提供了时区转换的功能。时区用TimeZone对象表示：
+			TimeZone tzDefault = TimeZone.getDefault(); // 当前时区
+			TimeZone tzGMT9    = TimeZone.getTimeZone("GMT+09:00"); // GMT+9:00时区
+			TimeZone tzNY      = TimeZone.getTimeZone("America/New_York"); // 纽约时区
+			System.out.println(tzDefault.getID()); // Asia/Shanghai
+			System.out.println(tzGMT9.getID()); // GMT+09:00
+			System.out.println(tzNY.getID()); // America/New_York
+
+4.格式化 和 时间戳
+	1).timestamp --> format 3种方法
+	Long timeStamp = System.currentTimeMillis(); 
+	SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	// -1 
+	String sd = sdf.format(Long.parseLong(String.valueOf(timeStamp)));
+	// -2 
+	String sd2 = sdf.format(new Date(Long.parseLong(String.valueOf(timeStamp))));  // 即是  Date d = new Date(timeStamp);  sdf.format(d); 
+	// -3 直接解析时间戳
+	String sd3 = sdf.format(timeStamp);
+
+	2).format --> timestamp
+	String day = "2020-5-12 21:30:30";
+	try{
+	 var sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	 Date dat = sim.parse(day);
+	 long timestamp_d = dat.getTime() / 1000; 
+	 System.out.println(timestamp_d);
+	}catch(ParseException e){
+		System.out.println(e);
+	}
+
+5. LocalDateTime
+   1).从Java 8开始，java.time包提供了新的日期和时间API，主要涉及的类型有：
+		本地日期和时间：LocalDateTime，LocalDate，LocalTime；
+		带时区的日期和时间：ZonedDateTime；
+		时刻：Instant；
+		时区：ZoneId，ZoneOffset；
+		时间间隔：Duration。
+		以及一套新的用于取代SimpleDateFormat的格式化类型DateTimeFormatter。
+
+		LocalDate d = LocalDate.now();
+        System.out.println(d); // 2020-09-09
+
+        LocalTime t = LocalTime.now();
+        System.out.println(t); //15:42:38.330053400
+
+        LocalDateTime dt = LocalDateTime.now();
+        System.out.println(dt); //2020-09-09T15:42:38.330053400
+
+
+        // 从 LocalDateTime 中 求得date ，time ，这样就同一时刻的日期和时间
+        LocalDateTime dt2 = LocalDateTime.now();
+        LocalDate d2 = dt2.toLocalDate(); // LocalDate
+        LocalTime t2 = dt2.toLocalTime(); // LocalTime
+
+   2).通过指定的日期和时间创建 LocalDateTime 可以通过of()方法：
+		// 指定日期和时间:
+		LocalDate d2 = LocalDate.of(2019, 11, 30);   // 2019-11-30, 注意11=11月
+		LocalTime t2 = LocalTime.of(15, 16, 17);     // 15:16:17
+		LocalDateTime dt2 = LocalDateTime.of(2019, 11, 30, 15, 16, 17);
+		LocalDateTime dt3 = LocalDateTime.of(d2, t2);
+   3).将字符串转换为LocalDateTime就可以传入标准格式：
+		LocalDateTime dt = LocalDateTime.parse("2019-11-19T15:16:17");
+		LocalDate d = LocalDate.parse("2019-11-19");
+		LocalTime t = LocalTime.parse("15:16:17");
+
+		注意ISO 8601规定的日期和时间分隔符是T。标准格式如下：
+		日期：yyyy-MM-dd
+		时间：HH:mm:ss
+		带毫秒的时间：HH:mm:ss.SSS
+		日期和时间：yyyy-MM-dd'T'HH:mm:ss
+		带毫秒的日期和时间：yyyy-MM-dd'T'HH:mm:ss.SSS
+   4).DateTimeFormatter 自定义输出的格式
+	  把一个非ISO 8601格式的字符串解析成LocalDateTime，可以使用新的DateTimeFormatter：
+			import java.time.*;
+			import java.time.format.*;
+			// 自定义格式化:
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+			System.out.println(dtf.format(LocalDateTime.now()));
+
+			// 用自定义格式解析:
+			LocalDateTime dt2 = LocalDateTime.parse("2019/11/30 15:16:17", dtf);
+			System.out.println(dt2);
+   5). LocalDateTime 提供了对日期和时间进行加减的非常简单的链式调用：   
+		LocalDateTime dt = LocalDateTime.of(2019, 10, 26, 20, 30, 59);
+		System.out.println(dt);
+		// 加5天减3小时:
+		LocalDateTime dt2 = dt.plusDays(5).minusHours(3);
+		System.out.println(dt2); // 2019-10-31T17:30:59
+		// 减1月:
+		LocalDateTime dt3 = dt2.minusMonths(1);
+		System.out.println(dt3); // 2019-09-30T17:30:59
+		注意到月份加减会自动调整日期，例如从2019-10-31减去1个月得到的结果是2019-09-30，因为9月没有31日。
+		对日期和时间进行调整则使用withXxx()方法，例如：withHour(15)会把10:11:12变为15:11:12：
+			调整年：withYear()
+			调整月：withMonth()
+			调整日：withDayOfMonth()
+			调整时：withHour()
+			调整分：withMinute()
+			调整秒：withSecond()
+		LocalDateTime dt = LocalDateTime.of(2019, 10, 26, 20, 30, 59);
+		System.out.println(dt);
+		// 日期变为31日:
+		LocalDateTime dt2 = dt.withDayOfMonth(31);
+		System.out.println(dt2); // 2019-10-31T20:30:59
+		// 月份变为9:
+		LocalDateTime dt3 = dt2.withMonth(9);
+		System.out.println(dt3); // 2019-09-30T20:30:59  ，因为9月没有31日。
+		
+		// 本月第一天0:00时刻:
+        LocalDateTime firstDay = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        System.out.println(firstDay);
+
+        // 本月最后1天:
+        LocalDate lastDay = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
+        System.out.println(lastDay);
+
+        // 下月第1天:
+        LocalDate nextMonthFirstDay = LocalDate.now().with(TemporalAdjusters.firstDayOfNextMonth());
+        System.out.println(nextMonthFirstDay);
+
+        // 本月第1个周一:
+        LocalDate firstWeekday = LocalDate.now().with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+        System.out.println(firstWeekday);
+		
+   6).判断两个LocalDateTime的先后，可以使用isBefore()、isAfter()方法，对于LocalDate和LocalTime类似：
+        LocalDateTime now    = LocalDateTime.now(); // 2020-09-09T08:18:05.416204
+        LocalDateTime target = LocalDateTime.of(2021, 11, 19, 8, 15, 0);
+        System.out.println(now.isBefore(target)); //true
+        System.out.println(LocalDate.now().isBefore(LocalDate.of(2019, 11, 19)));
+        System.out.println(LocalTime.now().isAfter(LocalTime.parse("08:15:00")));
+		
+   7).Duration和Period
+	Duration表示两个时刻之间的时间间隔。另一个类似的Period表示两个日期之间的天数：
+        LocalDateTime start = LocalDateTime.of(2019, 11, 19, 8, 15, 0);
+        LocalDateTime end = LocalDateTime.of(2020, 1, 9, 19, 25, 30);
+        Duration d = Duration.between(start, end);
+        System.out.println(d); // PT1235H10M30S , 表示1235小时10分钟30秒。
+
+        Period p = LocalDate.of(2019, 11, 19).until(LocalDate.of(2020, 1, 9));
+        System.out.println(p); // P1M21D , 表示1个月21天。
+		 
+    Duration和Period的表示方法也符合ISO 8601的格式，它以P...T...的形式表示，P...T之间表示日期间隔，T后面表示时间间隔。如果是PT...的格式表示仅有时间间隔。利用ofXxx()或者parse()方法也可以直接创建Duration：
+		Duration d1 = Duration.ofHours(10); // 10 hours
+		Duration d2 = Duration.parse("P1DT2H3M"); // 1 day, 2 hours, 3 minutes
+
+
 
 
 
