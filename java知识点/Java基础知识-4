@@ -395,25 +395,38 @@ File对象
 
 4.格式化 和 时间戳
 	1).timestamp --> format 3种方法
-	Long timeStamp = System.currentTimeMillis(); 
-	SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	// -1 
-	String sd = sdf.format(Long.parseLong(String.valueOf(timeStamp)));
-	// -2 
-	String sd2 = sdf.format(new Date(Long.parseLong(String.valueOf(timeStamp))));  // 即是  Date d = new Date(timeStamp);  sdf.format(d); 
-	// -3 直接解析时间戳
-	String sd3 = sdf.format(timeStamp);
+		Long timeStamp = System.currentTimeMillis(); 
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		// -1 
+		String sd = sdf.format(Long.parseLong(String.valueOf(timeStamp)));
+		// -2 
+		String sd2 = sdf.format(new Date(Long.parseLong(String.valueOf(timeStamp))));  // 即是  Date d = new Date(timeStamp);  sdf.format(d); 
+		// -3 直接解析时间戳
+		String sd3 = sdf.format(timeStamp);
+
+		// 简化
+        String datetime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        System.out.println("today is : "+datetime);
+
 
 	2).format --> timestamp
-	String day = "2020-5-12 21:30:30";
-	try{
-	 var sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	 Date dat = sim.parse(day);
-	 long timestamp_d = dat.getTime() / 1000; 
-	 System.out.println(timestamp_d);
-	}catch(ParseException e){
-		System.out.println(e);
-	}
+		String day = "2020-5-12 21:30:30";
+		try{
+		 var sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		 Date dat = sim.parse(day);
+		 long timestamp_d = dat.getTime() / 1000; 
+		 System.out.println(timestamp_d);
+		}catch(ParseException e){
+			System.out.println(e);
+		}
+
+	3).format --> timestamp
+		try{
+			Long timestamped = new SimpleDateFormat("yyyy-MM-dd").parse("2020-04-23").getTime() /1000 ;
+			System.out.println("2020-04-23 timestamp is : " + timestamped);
+		}catch(ParseException e){
+			System.out.println(e);
+		}
 
 5. LocalDateTime
    1).从Java 8开始，java.time包提供了新的日期和时间API，主要涉及的类型有：
@@ -530,34 +543,86 @@ File对象
 		Duration d1 = Duration.ofHours(10); // 10 hours
 		Duration d2 = Duration.parse("P1DT2H3M"); // 1 day, 2 hours, 3 minutes
 
+ZonedDateTime
+1.ZonedDateTime表示一个带时区的日期和时间，而LocalDateTime表示本地日期和时间。
+2.创建一个ZonedDateTime对象，有以下几种方法
+   1).通过now()方法返回当前时间：
+		ZonedDateTime zbj = ZonedDateTime.now(); // 默认时区 ，2020-09-10T01:47:10.815272Z[Etc/UTC]
+		ZonedDateTime zny = ZonedDateTime.now(ZoneId.of("America/New_York")); // 用指定时区获取当前时间 ，2020-09-09T21:47:10.817455-04:00[America/New_York]
+   2).通过给一个LocalDateTime附加一个ZoneId，就可以变成ZonedDateTime：
+        LocalDateTime ldt = LocalDateTime.of(2019, 9, 15, 15, 16, 17);
+        ZonedDateTime zbj = ldt.atZone(ZoneId.systemDefault());
+        ZonedDateTime zny = ldt.atZone(ZoneId.of("America/New_York"));
+3.时区转换
+   需要有一个ZonedDateTime对象，然后，通过withZoneSameInstant()将关联时区转换到另一个时区，转换后日期和时间都会相应调整。
+	// 以中国时区获取当前时间:
+	ZonedDateTime zbj = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"));
+	// 转换为纽约时间:
+	ZonedDateTime zny = zbj.withZoneSameInstant(ZoneId.of("America/New_York"));
+	注意，美国时间有夏令时的存在，时间有1小时的夏令时时差。
+4.转为本地时间
+	ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("America/New_York"));
+	LocalDateTime ldt = zdt.toLocalDateTime(); 
+5.DateTimeFormatter格式化时间
+   1).SimpleDateFormat是使用旧的Date对象时格式化时间，而DateTimeFormatter是新的LocalDateTime或ZonedLocalDateTime格式化时间。
+   2).和SimpleDateFormat不同的是，DateTimeFormatter不但是不变对象，它还是线程安全的。
+      因为SimpleDateFormat不是线程安全的，使用的时候，只能在方法内部创建新的局部变量。而DateTimeFormatter可以只创建一个实例，到处引用。 
+   3).创建DateTimeFormatter时，需通过传入格式化字符串实现：
+	  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");  // "yyyy-MM-dd HH:mm:ss"格式化字符串的使用方式与 SimpleDateFormat 完全一致。
+   4).另一种创建DateTimeFormatter的方法是，传入格式化字符串时，同时指定Locale： 
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E, yyyy-MMMM-dd HH:mm", Locale.US);
+	  
+        ZonedDateTime zdt = ZonedDateTime.now();
+        var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm ZZZZ");
+        System.out.println(formatter.format(zdt));   //2020-09-10T02:55 GMT
 
+        var zhFormatter = DateTimeFormatter.ofPattern("yyyy MMM dd EE HH:mm", Locale.CHINA);
+        System.out.println(zhFormatter.format(zdt)); //2020 9月 10 周四 02:55
 
+        var usFormatter = DateTimeFormatter.ofPattern("E, MMMM/dd/yyyy HH:mm", Locale.US);
+        System.out.println(usFormatter.format(zdt)); //Thu, September/10/2020 02:55
+6.Instant类
+  1). System.currentTimeMillis() 和 用Instant.now()获取当前时间戳效果类似：
+		Instant now = Instant.now();
+        now.getEpochSecond(); // 秒
+        now.toEpochMilli();   // 毫秒
+		
+   2).Instant类内部实现有两个字段
+		public final class Instant implements ... {
+			private final long seconds;  //秒为单位的时间戳
+			private final int nanos;     //纳秒精度
+		}	
+   3).和System.currentTimeMillis()返回的long相比，只是多了更高精度的纳秒。
+   4).既然Instant就是时间戳，那么，给它附加上一个时区，就可以创建出ZonedDateTime：
+		// 以指定时间戳创建Instant:
+		Instant ins = Instant.ofEpochSecond(1568568760);
+		ZonedDateTime zdt = ins.atZone(ZoneId.systemDefault());
+		System.out.println(zdt); // 2019-09-16T01:32:40+08:00[Asia/Shanghai]
 
+7.旧时间api 和 新时间api转换
+  1).old ==> new
+     把旧式的Date或Calendar转换为新API对象，可以通过toInstant()方法转换为Instant对象，再继续转换为ZonedDateTime：
+		// Date -> Instant:
+		Instant ins1 = new Date().toInstant();
 
+		// Calendar -> Instant -> ZonedDateTime:
+		Calendar calendar = Calendar.getInstance();
+		Instant ins2 = Calendar.getInstance().toInstant();
+		ZonedDateTime zdt = ins2.atZone(calendar.getTimeZone().toZoneId());
+   2). new ==> old 
+      如果要把新的ZonedDateTime转换为旧的API对象，只能借助long型时间戳做一个“中转”：
+		// ZonedDateTime -> long:
+		ZonedDateTime zdt = ZonedDateTime.now();
+		long ts = zdt.toEpochSecond() * 1000;
 
+		// long -> Date:
+		Date date = new Date(ts);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		// long -> Calendar:
+		Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		calendar.setTimeZone(TimeZone.getTimeZone(zdt.getZone().getId()));
+		calendar.setTimeInMillis(zdt.toEpochSecond() * 1000);
 
 
 
