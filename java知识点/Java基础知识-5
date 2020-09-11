@@ -1,0 +1,257 @@
+Maven
+1.Maven就是是专门为Java项目打造的管理和构建工具，它的主要功能有：
+	提供了一套标准化的项目结构；
+	提供了一套标准化的构建流程（编译，测试，打包，发布……）；
+	提供了一套依赖管理机制。
+2.Maven项目结构	
+	a-maven-project
+	├── pom.xml
+	├── src
+	│   ├── main
+	│   │   ├── java        ---> 源码目录
+	│   │   └── resources   ---> 存放资源文件目录
+	│   └── test
+	│       ├── java        ---> 测试源码目录
+	│       └── resources   ---> 测试资源文件目录
+	└── target(最后所有编译、打包生成的文件都放在target目录里)
+		
+3.Maven是一个Java项目的管理和构建工具：
+	Maven使用pom.xml定义项目内容，并使用预设的目录结构；
+	在Maven中声明一个依赖项可以自动下载并导入classpath；
+	Maven使用groupId，artifactId和version唯一定位一个依赖。
+	
+4.依赖关系
+  1).Maven定义了几种依赖关系，分别是compile、test、runtime和provided：
+	scope		说明											示例
+	compile		编译时需要用到该jar包（默认,常用）				commons-logging
+	test		编译Test时需要用到该jar包						junit
+	runtime		编译时不需要，但运行时需要用到					mysql
+	provided	编译时需要用到，但运行时由JDK或某个服务器提供	servlet-api
+   2).使用Maven镜像仓库需要一个配置，在用户主目录下进入.m2目录，创建一个settings.xml配置文件，内容如下：
+		<settings>
+			<mirrors>
+				<mirror>
+					<id>aliyun</id>
+					<name>aliyun</name>
+					<mirrorOf>central</mirrorOf>
+					<!-- 国内推荐阿里云的Maven镜像 -->
+					<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+				</mirror>
+			</mirrors>
+		</settings>
+   3).确定某个组件(包)的groupId、artifactId和version
+	  通过 search.maven.org 搜索相应组件(包)的关键字后，复制其groupId、artifactId和version即可	
+   4).命令行编译。在命令中，进入到pom.xml所在目录，输入以下命令：
+      $ mvn clean package   #如果一切顺利，即可在target目录下获得编译后自动打包的jar。
+   5).在实际开发过程中，经常使用的命令有：
+	mvn clean：清理所有生成的class和jar；
+	mvn clean compile：先清理，再执行到compile；
+	mvn clean test：先清理，再执行到test，因为执行test前必须执行compile，所以这里不必指定compile；
+	mvn clean package：先清理，再执行到package打包。
+		
+		
+进程与线程
+1.进程和线程是包含关系
+2.实现多任务的方法
+  1).多进程模式（每个进程只有一个线程）：
+  2).多线程模式（一个进程有多个线程）：	
+  3).多进程＋多线程模式（复杂度最高）：
+3.和多线程相比，多进程的缺点在于：	
+  1).创建进程比创建线程开销大，尤其是在Windows系统上；
+  2).进程间通信比线程间通信要慢，因为线程间通信就是读写同一个变量，速度很快。
+  3).而多进程的优点在于：
+	多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
+4.Java语言内置了多线程支持：一个Java程序实际上是一个JVM进程，JVM进程用一个主线程来执行main()方法，在main()方法内部，我们又可以启动多个线程。
+5.多线程和单线程相比，多线程编程的特点在于：多线程经常需要读写共享数据，并且需要同步。	
+6.Java程序启动(启动了一个JVM进程),然后JVM启动主线程来执行main()方法，最后在main()方法中我们就启动其他线程。	
+7.创建一个新线程，需要先实例化一个Thread实例，然后调用它的start()方法：	
+    Thread t = new Thread();
+    t.start(); // 启动新线程
+  1).从Thread派生一个自定义类，然后覆写run()方法：	
+		public class Main {
+			public static void main(String[] args) {
+				Thread t = new MyThread();
+				t.start(); // 启动新线程 ，start()方法会在内部自动调用实例的 run()方法。
+			}
+		}
+
+		class MyThread extends Thread {
+			@Override
+			public void run() {
+				System.out.println("start new thread!");
+			}
+		}
+
+   2).创建Thread实例时，传入一个Runnable实例：
+		public class Main {
+			public static void main(String[] args) {
+				Thread t = new Thread(new MyRunnable());
+				t.start(); // 启动新线程
+			}
+		}
+
+		class MyRunnable implements Runnable {
+			@Override
+			public void run() {
+				System.out.println("start new thread!");
+			}
+		}
+		
+		//也可这样实例线程 和 run方法
+		Thread t = new Thread(){
+			public void run() {
+				Thread.sleep(10);
+			}
+		};
+		
+   3).用Java8引入的lambda语法进一步简写为：
+		public class Main {
+			public static void main(String[] args) {
+				Thread t = new Thread(() -> {
+					System.out.println("start new thread!");
+				});
+				t.start(); // 启动新线程
+			}
+		}
+   4).直接调用run()方法，相当于调用了一个普通的Java方法，当前线程并没有任何改变，也不会启动新线程。必须调用Thread实例的start()方法才能启动新线程。
+   5).线程的优先级
+	  Thread.setPriority(int n) // 1~10, 默认值5
+8.Thread.sleep(毫秒)暂停线程一段时间
+	public class Main {
+		public static void main(String[] args) {
+			System.out.println("main start...");
+			
+			//注意实例线程方法
+			Thread t = new Thread() {
+				public void run() {
+					System.out.println("thread run...");
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {}
+					System.out.println("thread end.");
+				}
+			};
+			t.start();
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {}
+			System.out.println("main end...");
+		}
+	}
+
+9.Java用Thread对象表示一个线程，通过调用start()启动一个新线程；
+  一个线程对象只能调用一次start()方法；
+  线程的执行代码写在run()方法中；线程调度由操作系统决定，程序本身无法决定调度顺序； Thread.sleep(毫秒)可以把当前线程暂停一段时间。
+	
+10.线程的状态
+  1).一个线程对象只能调用一次start()方法启动新线程，并在新线程中执行run()方法。一旦run()方法执行完毕，线程就结束了。
+  2).Java线程的状态有以下几种：
+		New：新创建的线程，尚未执行；
+		Runnable：运行中的线程，正在执行run()方法的Java代码；
+		Blocked：运行中的线程，因为某些操作被阻塞而挂起；
+		Waiting：运行中的线程，因为某些操作在等待中；
+		Timed Waiting：运行中的线程，因为执行sleep()方法正在计时等待；
+		Terminated：线程已终止，因为run()方法执行完毕。	
+  3).线程终止的原因有：
+		线程正常终止：run()方法执行到return语句返回；
+		线程意外终止：run()方法因为未捕获的异常导致线程终止；
+		对某个线程的Thread实例调用stop()方法强制终止（强烈不推荐使用）。			
+  4).一个线程还可以等待另一个线程运行结束后再运行。例如，main线程在启动t线程后，通过调用t.join()等待t线程结束后main线程再运行：				
+		Thread t = new Thread(() -> {
+			System.out.println("hello");
+		});
+		System.out.println("start");  // start
+		t.start(); 					  // hello	
+		t.join(); 					  // main线程 等待t线程结束
+		System.out.println("end");    // 待t线程结束后输出end
+   5).Java线程对象Thread的状态包括：New、Runnable、Blocked、Waiting、Timed Waiting和Terminated；
+		通过对另一个线程对象调用join()方法可以等待其执行结束；
+		可以指定等待时间，超过等待时间线程仍然没有结束就不再等待；
+		对已经运行结束的线程调用join()方法会立刻返回。
+11.中断线程
+   1).中断线程就是其他线程给该线程发一个信号，该线程收到信号后结束执行run()方法，使得自身线程能立刻结束运行。
+   2).对目标线程调用 interrupt() 方法可以请求中断一个线程，目标线程通过检测 isInterrupted()标志 获取自身是否已中断。如果目标线程处于等待状态，该线程会捕获到InterruptedException；
+		public class Main {
+			public static void main(String[] args) throws InterruptedException {
+				Thread t = new MyThread();
+				t.start();
+				Thread.sleep(1); // 暂停1毫秒
+				t.interrupt(); // 中断t线程
+				t.join(); // 等待t线程结束
+				System.out.println("end");
+			}
+		}
+
+		class MyThread extends Thread {
+			public void run() {
+				int n = 0;
+				while (! isInterrupted()) {  // isInterrupted() 为true立即中断
+					n ++;
+					System.out.println(n + " hello!");
+				}
+			}
+		}
+
+   3).目标线程检测到isInterrupted()为true或者捕获了InterruptedException都应该立刻结束自身线程；
+   4).通过标志位判断需要正确使用volatile关键字，volatile关键字解决了共享变量在线程间的可见性问题；
+		public class Main {
+			public static void main(String[] args)  throws InterruptedException {
+				HelloThread t = new HelloThread();
+				t.start();
+				Thread.sleep(1);
+				t.running = false; // 标志位置为false
+			}
+		}
+
+		class HelloThread extends Thread {
+			public volatile boolean running = true; // 线程间共享变量需要使用volatile关键字标记，确保每个线程都能读取到更新后的变量值。
+			public void run() {
+				int n = 0;
+				while (running) {
+					n ++;
+					System.out.println(n + " hello!");
+				}
+				System.out.println("end!");
+			}
+		}
+12.守护线程
+   1).守护线程是指为其他线程服务的线程。
+   2).在调用start()方法前，调用setDaemon(true)把该线程标记为守护线程：
+		Thread t = new MyThread();
+		t.setDaemon(true);
+		t.start();
+   3).在JVM中，所有非守护线程都执行完毕后，无论有没有守护线程，虚拟机都会自动退出。因此，JVM退出时，不必关心守护线程是否已结束。
+   4).守护线程不能持有任何需要关闭的资源句柄，例如打开文件等，因为虚拟机退出时，守护线程没有任何机会来关闭文件，这会导致数据丢失。
+13.线程同步
+   1).
+			
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

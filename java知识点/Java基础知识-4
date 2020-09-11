@@ -623,27 +623,19 @@ ZonedDateTime
 		calendar.clear();
 		calendar.setTimeZone(TimeZone.getTimeZone(zdt.getZone().getId()));
 		calendar.setTimeInMillis(zdt.toEpochSecond() * 1000);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+8.在数据库中存储日期和时间
+  1).旧式的java.util.Date，我们还可以找到另一个java.sql.Date，它继承自java.util.Date
+    在数据库中，也存在几种日期和时间类型：
+	DATETIME：表示日期和时间；
+	DATE：仅表示日期；
+	TIME：仅表示时间；
+	TIMESTAMP：和DATETIME类似，但是数据库会在创建或者更新记录的时候同时修改TIMESTAMP。
+   2).数据库类型与Java新旧API的映射关系：
+		数据库		对应Java类（旧）		对应Java类（新）
+		DATETIME	java.util.Date			LocalDateTime
+		DATE		java.sql.Date			LocalDate
+		TIME		java.sql.Time			LocalTime
+		TIMESTAMP	java.sql.Timestamp		LocalDateTime
 
 
 
