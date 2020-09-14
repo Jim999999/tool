@@ -337,7 +337,7 @@ Maven
 	4).死锁产生的条件是多线程各自持有不同的锁，并互相试图获取对方已持有的锁，导致无限等待；			
 	5).避免死锁的方法是多线程获取锁的顺序要一致。		
 		
-17.使用wait和notify	
+17.使用wait和notify
 	1).多线程协调运行的原则就是：当条件不满足时，线程进入等待状态；当条件满足时，线程被唤醒，继续执行任务。	
 	2).wait()方法必须在当前获取的锁对象上调用.并且，必须在synchronized块中才能调用wait()方法。
 		public synchronized String getTask() {
@@ -352,64 +352,158 @@ Maven
 	4).在相同的锁对象上调用notify()方法，让等待的线程被重新唤醒，然后从wait()方法返回。
 		public synchronized void addTask(String s) {
 			this.queue.add(s);
-			this.notify(); // 唤醒在this锁等待的线程
+			#this.notify();     // 唤醒在this锁等待的线程
+			this.notifyAll(); // 唤醒在this锁等待的所有线程
 		}
+	5).在synchronized内部可以调用notify()或notifyAll()唤醒其他等待线程；
+	6).必须在已获得的锁对象上调用notify()或notifyAll()方法；
 	
+18.使用ReentrantLock
+   1).ReentrantLock可以替代synchronized进行同步；
+   2).synchronized是Java语言层面提供的语法，所以我们不需要考虑异常，而ReentrantLock是Java代码实现的锁，我们就必须先获取锁，然后在finally中正确释放锁。
+   3).使用ReentrantLock比直接使用synchronized更安全，线程在tryLock()失败的时候不会导致死锁。
+   4).ReentrantLock必须先获取到锁，再进入try {...}代码块，最后使用finally保证释放锁；
+		public class Counter {
+			private final Lock lock = new ReentrantLock();
+			private int count;
 
+			public void add(int n) {
+				lock.lock();       // 获取锁
+				try {
+					count += n;
+				} finally {
+					lock.unlock(); // finally 保证释放锁
+				}
+			}
+		}
+   5).和synchronized不同的是，ReentrantLock可以 “尝试” 获取锁
+		if (lock.tryLock(1, TimeUnit.SECONDS)) {
+			try {
+				...
+			} finally {
+				lock.unlock();
+			}
+		}
+		上述代码在尝试获取锁的时候，最多等待1秒。如果1秒后仍未获取到锁，tryLock()返回false，程序就可以做一些额外处理，而不是无限等待下去。
+   6).ReentrantLock使用Condition对象来实现wait和notify的功能。
+		class TaskQueue {
+			private final Lock lock = new ReentrantLock();
+			private final Condition condition = lock.newCondition();  // 引用的Condition对象从Lock实例的newCondition()返回
+			private Queue<String> queue = new LinkedList<>();
 
+			public void addTask(String s) {
+				lock.lock();
+				try {
+					queue.add(s);
+					condition.signalAll();  // 从condition对象中引用 signalAll()
+				} finally {
+					lock.unlock();
+				}
+			}
 
+			public String getTask() {
+				lock.lock(); // 获取锁
+				try {
+					while (queue.isEmpty()) {
+						condition.await(); // 从condition对象中引用 await() ,注意和 synchronized锁对象的 wait() 字母拼写区别
+					}
+					return queue.remove();
+				} finally {
+					lock.unlock();
+				}
+			}
+		}
+   7).Condition提供的await()、signal()、signalAll()原理和synchronized锁对象的wait()、notify()、notifyAll()是一致的，并且其行为也是一样的：
+		await()会释放当前锁，进入等待状态；
+		signal()会唤醒某个等待线程；
+		signalAll()会唤醒所有等待线程；
+		唤醒线程从await()返回后需要重新获得锁。
+		此外，和tryLock()类似，await()可以在等待指定时间后，如果还没有被其他线程通过signal()或signalAll()唤醒，可以自己醒来：
+		if (condition.await(1, TimeUnit.SECOND)) {
+			// 被其他线程唤醒
+		} else {
+			// 指定时间内没有被其他线程唤醒
+		}
 
+19.使用 ReadWriteLock （只有一个线程能写）
+    1).ReadWriteLock可以保证：
+	只允许一个线程写入（其他线程既不能写入也不能读取）；
+	没有写入时，多个线程允许同时读（提高性能）。
 
+		public class Counter {
+			private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
+			private final Lock rlock = rwlock.readLock();
+			private final Lock wlock = rwlock.writeLock();
+			private int[] counts = new int[10];
 
+			public void inc(int index) {
+				wlock.lock(); // 加写锁
+				try {
+					counts[index] += 1;
+				} finally {
+					wlock.unlock(); // 释放写锁
+				}
+			}
 
+			public int[] get() {
+				rlock.lock(); // 加读锁
+				try {
+					return Arrays.copyOf(counts, counts.length);
+				} finally {
+					rlock.unlock(); // 释放读锁
+				}
+			}
+		}
+    2).ReadWriteLock只允许一个线程写入；
+		ReadWriteLock允许多个线程在没有写入时同时读取；
+		ReadWriteLock适合读多写少的场景。
+    3).ReadWriteLock在读的过程中不允许写，是一种悲观读锁表现。   
 
-
-
-
-
-
-
-
-
-
-
-	
+20. StampedLock
+   1). Java 8引入了新的读写锁：StampedLock。
+   2). StampedLock和ReadWriteLock相比，改进之处在于：读的过程中也允许获取写锁后写入 --- 乐观锁. 
+   3). 乐观锁的并发效率更高，(乐观锁在读时允许写入,悲观锁则是读的过程中拒绝有写入)。
+   4). StampedLock把读锁细分为乐观读和悲观读，能进一步提升并发效率。但这也是有代价的：一是代码更加复杂，二是StampedLock是不可重入锁，不能在一个线程中反复获取同一个锁。
+   5). StampedLock还提供了更复杂的将悲观读锁升级为写锁的功能，它主要使用在if-then-update的场景：即先读，如果读的数据满足条件，就返回，如果读的数据不满足条件，再尝试写。
+   6). 乐观锁其实不上锁，只检查版本号 --> (StampedLock.tryOptimisticRead())。
 		
+	public class Point {
+		private final StampedLock stampedLock = new StampedLock();
+
+		private double x;
+		private double y;
+
+		public void move(double deltaX, double deltaY) {
+			long stamp = stampedLock.writeLock(); // 获取写锁
+			try {
+				x += deltaX;
+				y += deltaY;
+			} finally {
+				stampedLock.unlockWrite(stamp); // 释放写锁
+			}
+		}
+
+		public double distanceFromOrigin() {
+			long stamp = stampedLock.tryOptimisticRead(); // 获得一个乐观读锁
+			// 注意下面两行代码不是原子操作
+			// 假设x,y = (100,200)
+			double currentX = x;
+			// 此处已读取到x=100，但x,y可能被写线程修改为(300,400)
+			double currentY = y;
+			// 此处已读取到y，如果没有写入，读取是正确的(100,200)
+			// 如果有写入，读取是错误的(100,400)
+			if (!stampedLock.validate(stamp)) { // 检查乐观读锁后是否有其他写锁发生
+				stamp = stampedLock.readLock(); // 获取一个悲观读锁
+				try {
+					currentX = x;
+					currentY = y;
+				} finally {
+					stampedLock.unlockRead(stamp); // 释放悲观读锁
+				}
+			}
+			return Math.sqrt(currentX * currentX + currentY * currentY);
+		}
+	}	
+			
+			
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
