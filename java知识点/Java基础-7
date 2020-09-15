@@ -1,0 +1,57 @@
+1.JDBC
+	1).JDBC是Java DataBase Connectivity的缩写，它是Java程序访问数据库的标准接口。
+	2).Java程序访问数据库：Java代码 --> JDBC接口 -> JDBC驱动 -> 数据库。
+	3).实际上，一个MySQL的JDBC的驱动就是一个jar包，它本身也是纯Java编写的。
+	4).JDBC驱动，其实就是一个第三方jar包.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
