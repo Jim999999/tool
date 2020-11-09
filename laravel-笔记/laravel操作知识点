@@ -137,6 +137,14 @@ https://xueyuanjun.com/post/3585.html
 表单字段验证
 https://xueyuanjun.com/post/9547.html#toc_17
 
+#获取执行的sql语句
+方法1：调用vendor\laravel\framework\src\Illuminate\Database\Query的toSql方法： 
+echo $query->toSql(); 
+
+方法2:开启 enableQueryLog，如：
+DB::enableQueryLog();
+$user = App\User::all();
+return response()->json(DB::getQueryLog());
 
 
 laravel api资源定位
@@ -273,6 +281,10 @@ redis 操作
 $redis = app('redis.connection');
 https://blog.csdn.net/h330531987/article/details/79090555
 
+
+with ,withcount 用法 -- 渴求式操作
+https://blog.csdn.net/u011341352/article/details/106660994
+https://blog.csdn.net/welcome123580/article/details/78572314
 
 
 [init]

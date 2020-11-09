@@ -1,0 +1,70 @@
+ Laravel 授权方式 Gate 和 Policy
+
+Gates
+1.在 AuthServiceProvider 的 boot 方法里定义授权，有两种形式(闭包和控制器@方法)。
+Gate::define('update articles', function ($user, $article) {
+    return $user->id == $article->user_id;
+});
+
+Gate::define('update articles', 'ArticlePolicy@update');
+
+2.两种形式区别在于，授权逻辑是写在闭包里，还是 PHP 类方法里。
+3.闭包或方法最终都返回一个布尔值，true 表示有权限，false 表示没权限。
+4.使用授权
+	Gate 门面： Gate::allows('update articles', $article) 和 Gate::denies('update articles', $article)。
+	Controller：$this->authorize('update articles', $article)。
+	Blade 模板：@can('update articles', $article) 和 @cannot('update articles', $article) 指令。
+	User Model 实例：$user->can('update articles', $article) 和 $user->cannot('update articles', $article)。
+
+
+Policy
+1.为了能更加清爽地定义和使用授权，Laravel 引入了 Policy。在 AuthServiceProvider 的 policies 数组属性里添加授权映射关系即可！
+	/**
+	 * The policy mappings for the application.
+	 *
+	 * @var array
+	 */
+	protected $policies = [
+		Article::class => ArticlePolicy::class,
+	];
+2.make:policy Artisan 命令生成
+ php artisan make:policy PostPolicy
+3.使用
+	$user->can('view', $article);
+	$user->can('create', Article::class);
+	$user->can('update', $article);
+	$user->can('delete', $article);
+	$user->can('xxx', $article); // 调用在ArticlePolicy自定义的方法xxx
+	
+	
+	在 balde 模板中使用 @can 和 @cannot方法来判断
+	@can('create', App\PostModel::class)
+	  <a href="">创建</a>
+	@endcan
+
+	@can("update", $post)
+	  <a href="">编辑</a>
+	@endcan	
+	
+4.在 Policy 中有一个在所有方法执行前调用的特殊方法 --- before ，返回true有权限，返回false无权限，如果返回 null，则通过其它的策略方法来决定授权与否。
+	public function before($user, $ability)
+	{
+		if ($user->isSuperAdmin()) {
+			return true;
+		}
+	}
+
+5.总结
+定义-->注册(模型关联)-->判断使用
+make:policy --> AuthServiceProvider（$policies） --> 使用(can)
+	注意 ：1. can 方法会自动调用核实的策略方法并且返回 boolean 值。如果没有策略注册到这个模型，can 方法会尝试调用和动作名相匹配的基于闭包的 Gate。
+		   2.一些动作，比如 create 并不需要指定模型实例。在这种情况下，可传递一个类名给 can 方法。当授权动作时，这个类名将被用来判断使用哪个策略。
+				$user->can('create', Post::class)
+
+
+授权策略（Policy）
+https://www.ucloud.cn/yun/28492.html
+https://blog.csdn.net/qq_42451060/article/details/80905889
+https://learnku.com/articles/5479/introduce-laravel-authorization-mode-gate-and-policy
+https://learnku.com/docs/laravel/5.5/authorization/1310
+
