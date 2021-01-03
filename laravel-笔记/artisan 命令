@@ -80,7 +80,7 @@ php artisan
 			
 queue使用
 https://blog.csdn.net/weixin_33755557/article/details/88922686
-https://learnku.com/articles/3729/use-laravel-queue-to-understand-the-knowledge			
+https://learnku.com/articles/3729/use-laravel-queue-to-understand-the-knowledge
 			
 #migrate 相关命令
 php artisan migrate --help
