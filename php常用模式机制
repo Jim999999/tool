@@ -184,7 +184,11 @@ https://xueyuanjun.com/books/api-driven-development-laravel-vue
 
 
 事务
-特性：原子性，一致性，隔离性，持久性
+特性：
+原子性(事务要么执行，要么不执行),
+一致性(数据的完整性)，
+持久性(事务提交后，对系统的影响是永久的)，
+隔离性(事务的执行相互不影响)
 Mysql事务的4种隔离级别，由低到高分别为：Read uncommitted 、Read committed 、Repeatable read 、Serializable 。
 在事务的并发操作中可能会出现脏读，不可重复读，幻读(一个事务范围内两个相同的查询,最后一次的结果集比第一次的多)。
 读未提交：一个事务可以读取另一个未提交事务的数据。 --> 脏读 --> 解决 (read commited 读提交).
